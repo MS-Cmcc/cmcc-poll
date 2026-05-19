@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(npm --version)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install zod gray-matter @supabase/supabase-js recharts react-wordcloud)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install zod gray-matter @supabase/supabase-js recharts)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install d3-cloud --legacy-peer-deps)",
+      "Bash(rm -rf app/globals.css app/page.tsx app/layout.tsx public/next.svg public/vercel.svg AGENTS.md README.md)",
+      "Bash(mkdir -p app/admin/control app/admin/display \"app/s/[code]\" app/api/admin/sessions app/api/admin/verify app/api/sessions/by-code/\"[code]\" \"app/api/sessions/[id]/state\" \"app/api/sessions/[id]/votes\" \"app/api/sessions/[id]/participants\" app/api/health lib/db lib/md lib/realtime components/admin components/audience components/shared supabase/migrations)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install --save-dev tsx)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm run build)"
+    ],
+    "additionalDirectories": [
+      "/Users/mscuro/Documents/github/cmcc-poll/app",
+      "/Users/mscuro/Documents/github/cmcc-poll/app/s"
+    ]
+  }
+}

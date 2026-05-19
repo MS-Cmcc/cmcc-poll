@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install --legacy-peer-deps)",
+      "Bash(chmod +x /Users/mscuro/Documents/github/cmcc-poll/node_modules/.bin/napi-postinstall)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install)"
+    ]
+  }
+}
