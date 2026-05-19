@@ -36,7 +36,9 @@ export default function ControlPage() {
   const fetchState = useCallback(async () => {
     if (!session || !adminCode) return;
     try {
-      const res = await fetch(`/api/sessions/${session.id}/state`);
+      const res = await fetch(`/api/admin/sessions/${session.id}/state`, {
+        headers: { "x-admin-code": adminCode },
+      });
       if (res.ok) setState(await res.json());
     } catch { /* ignore */ }
   }, [session, adminCode]);

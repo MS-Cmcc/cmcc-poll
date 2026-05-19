@@ -3,7 +3,19 @@
     "allow": [
       "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install --legacy-peer-deps)",
       "Bash(chmod +x /Users/mscuro/Documents/github/cmcc-poll/node_modules/.bin/napi-postinstall)",
-      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install)"
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install)",
+      "Bash(mkdir -p \"/Users/mscuro/Documents/github/cmcc-poll/app/api/admin/sessions/[id]/state\")",
+      "Bash(mkdir -p \"/Users/mscuro/Documents/github/cmcc-poll/app/api/sessions/[id]/questions/[index]\")",
+      "Bash(npm run *)",
+      "Bash(ls ~/.nvm/versions/node/ 2>/dev/null && which node && node --version)",
+      "Read(//Users/mscuro/.nvm/versions/node/**)",
+      "Bash(~/.nvm/versions/node/v22.13.1/bin/node ~/.nvm/versions/node/v22.13.1/bin/npm run build)",
+      "Bash(~/.nvm/versions/node/v20.19.5/bin/node --version)",
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v20.19.5/bin:__TRACKED_VAR__ npm run build)"
+    ],
+    "additionalDirectories": [
+      "/Users/mscuro/Documents/github/cmcc-poll/app/api/admin/sessions/[id]",
+      "/Users/mscuro/Documents/github/cmcc-poll/app/api/sessions/[id]/questions"
     ]
   }
 }

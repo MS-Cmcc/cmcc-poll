@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionById, getParticipantCount } from "@/lib/db/queries";
+import { getSessionById } from "@/lib/db/queries";
 
-// GET /api/sessions/[id]/state — polled by audience and control panel
+// GET /api/sessions/[id]/state — minimal public endpoint polled by audience clients
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -16,16 +16,10 @@ export async function GET(
     );
   }
 
-  const participantCount = await getParticipantCount(id);
-  const questions = session.questions_snapshot as unknown[];
-  const currentQuestion = questions[session.current_question_index] ?? null;
-
   return NextResponse.json({
     sessionId: session.id,
     status: session.status,
     currentQuestionIndex: session.current_question_index,
-    totalQuestions: questions.length,
-    currentQuestion,
-    participantCount,
+    totalQuestions: session.questions_snapshot.length,
   });
 }

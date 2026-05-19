@@ -17,8 +17,6 @@ interface SessionState {
   status: "active" | "ended" | "draft";
   currentQuestionIndex: number;
   totalQuestions: number;
-  currentQuestion: Question | null;
-  participantCount: number;
 }
 
 function getOrCreateToken(sessionId: string): string {
@@ -29,10 +27,6 @@ function getOrCreateToken(sessionId: string): string {
     localStorage.setItem(key, token);
   }
   return token;
-}
-
-function getParticipantId(sessionId: string): string | null {
-  return localStorage.getItem(`menti_pid_${sessionId}`);
 }
 
 function setParticipantId(sessionId: string, pid: string) {
@@ -52,6 +46,8 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [participantId, setParticipantIdState] = useState<string | null>(null);
   const [state, setState] = useState<SessionState | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [questionLoading, setQuestionLoading] = useState(false);
   const [voted, setVoted] = useState(false);
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(true);
@@ -62,7 +58,6 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
     let mounted = true;
     async function join() {
       try {
-        // 1. Validate code
         const codeRes = await fetch(`/api/sessions/by-code/${code}`);
         if (!codeRes.ok) {
           const d = await codeRes.json();
@@ -72,10 +67,8 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
         const { sessionId: sid } = await codeRes.json();
         if (!mounted) return;
 
-        // 2. Get/create client token
         const clientToken = getOrCreateToken(sid);
 
-        // 3. Register participant
         const partRes = await fetch(`/api/sessions/${sid}/participants`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +101,6 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
     if (res.ok) {
       const data: SessionState = await res.json();
       setState((prev) => {
-        // Reset voted flag if question changed
         if (prev && prev.currentQuestionIndex !== data.currentQuestionIndex) {
           setVoted(hasVotedLocally(sessionId, data.currentQuestionIndex));
         }
@@ -117,13 +109,6 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
     }
   }, [sessionId]);
 
-  // Set initial voted state when session loads
-  useEffect(() => {
-    if (sessionId && state) {
-      setVoted(hasVotedLocally(sessionId, state.currentQuestionIndex));
-    }
-  }, [sessionId, state?.currentQuestionIndex]); // eslint-disable-line
-
   // Poll for state changes
   useEffect(() => {
     if (!sessionId) return;
@@ -131,6 +116,49 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
     const interval = setInterval(fetchState, 2000);
     return () => clearInterval(interval);
   }, [sessionId, fetchState]);
+
+  // Fetch question whenever the index changes
+  useEffect(() => {
+    if (!sessionId || state === null) return;
+    const index = state.currentQuestionIndex;
+    let cancelled = false;
+
+    async function fetchQuestion(attempt = 0) {
+      setQuestionLoading(true);
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/questions/${index}`);
+        if (!cancelled) {
+          if (res.ok) {
+            const data = await res.json();
+            setCurrentQuestion(data.question as Question);
+          } else if (attempt === 0) {
+            // Retry once on transient failure
+            setTimeout(() => { if (!cancelled) fetchQuestion(1); }, 800);
+            return;
+          }
+          // After retry or non-retriable error, stay in loading state
+          // so the UI shows "Loading question…" rather than crashing
+        }
+      } catch {
+        if (!cancelled && attempt === 0) {
+          setTimeout(() => { if (!cancelled) fetchQuestion(1); }, 800);
+          return;
+        }
+      } finally {
+        if (!cancelled) setQuestionLoading(false);
+      }
+    }
+
+    fetchQuestion();
+    return () => { cancelled = true; };
+  }, [sessionId, state?.currentQuestionIndex]); // eslint-disable-line
+
+  // Sync voted flag on question index change
+  useEffect(() => {
+    if (sessionId && state) {
+      setVoted(hasVotedLocally(sessionId, state.currentQuestionIndex));
+    }
+  }, [sessionId, state?.currentQuestionIndex]); // eslint-disable-line
 
   async function handleVote(value: Record<string, unknown>) {
     if (!sessionId || !participantId || !state) return;
@@ -201,8 +229,15 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
     );
   }
 
-  const q = state.currentQuestion;
-  if (!q) return null;
+  const q = currentQuestion;
+
+  if (questionLoading || !q) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400 animate-pulse">Loading question…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex flex-col px-5 py-8 gap-6 max-w-lg mx-auto">
@@ -221,7 +256,7 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
       )}
       {q.type === "word_cloud" && (
         <WordCloudInput
-          maxWords={(q as { max_words?: number }).max_words ?? 3}
+          maxWords={(q as WordCloudQuestion).max_words ?? 3}
           onSubmit={(v) => handleVote(v)}
         />
       )}

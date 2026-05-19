@@ -1,5 +1,14 @@
 import { getServiceClient } from "./client";
 import type { Session, Participant, Vote } from "./types";
+import type { Question } from "@/lib/md/schemas";
+
+export interface AdminSessionState {
+  id: string;
+  status: Session["status"];
+  current_question_index: number;
+  questions_snapshot: Question[];
+  participantCount: number;
+}
 
 export async function getSessionByCode(code: string): Promise<Session | null> {
   const db = getServiceClient();
@@ -32,6 +41,31 @@ export async function getSessionByDisplayToken(token: string): Promise<Session |
     .single();
   if (error) return null;
   return data as Session;
+}
+
+export async function getSessionStateForAdmin(id: string): Promise<AdminSessionState | null> {
+  const db = getServiceClient();
+  const { data, error } = await db
+    .from("sessions")
+    .select(`
+      id,
+      status,
+      current_question_index,
+      questions_snapshot,
+      participants(count)
+    `)
+    .eq("id", id)
+    .single();
+  if (error || !data) return null;
+  // Supabase returns embedded count as [{ count: N }]
+  const participantCount = (data.participants as unknown as { count: number }[])[0]?.count ?? 0;
+  return {
+    id: data.id,
+    status: data.status as Session["status"],
+    current_question_index: data.current_question_index,
+    questions_snapshot: data.questions_snapshot as unknown as Question[],
+    participantCount,
+  };
 }
 
 export async function getParticipantCount(sessionId: string): Promise<number> {
