@@ -19,13 +19,29 @@ function DisplayContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [adminCode, setAdminCode] = useState<string | null>(null);
   const [state, setState] = useState<SessionState | null>(null);
   const [error, setError] = useState("");
   const channelRef = useRef<ReturnType<typeof getAnonClient>["channel"] extends (...args: infer A) => infer R ? R : never | null>(null);
 
-  const fetchState = useCallback(async (id: string) => {
+  useEffect(() => {
+    setAdminCode(localStorage.getItem("admin_code"));
+  }, []);
+
+  const fetchState = useCallback(async (id: string, code: string | null) => {
+    if (code) {
+      const res = await fetch(`/api/admin/sessions/${id}/state`, {
+        headers: { "x-admin-code": code },
+      });
+      if (res.ok) { setState(await res.json()); return; }
+    }
+    // Fallback if no admin_code: slim public state + separate question fetch
     const res = await fetch(`/api/sessions/${id}/state`);
-    if (res.ok) setState(await res.json());
+    if (!res.ok) return;
+    const slim = await res.json();
+    const qRes = await fetch(`/api/sessions/${id}/questions/${slim.currentQuestionIndex}`);
+    const question = qRes.ok ? (await qRes.json()).question : null;
+    setState({ ...slim, currentQuestion: question, participantCount: 0 });
   }, []);
 
   // Resolve display_token → session
@@ -43,7 +59,7 @@ function DisplayContent() {
   // Subscribe to Supabase Realtime + initial fetch
   useEffect(() => {
     if (!sessionId) return;
-    fetchState(sessionId);
+    fetchState(sessionId, adminCode);
 
     const supabase = getAnonClient();
     const channel = supabase
@@ -53,14 +69,14 @@ function DisplayContent() {
         schema: "public",
         table: "sessions",
         filter: `id=eq.${sessionId}`,
-      }, () => fetchState(sessionId))
+      }, () => fetchState(sessionId, adminCode))
       .subscribe();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     channelRef.current = channel as any;
 
     return () => { supabase.removeChannel(channel); };
-  }, [sessionId, fetchState]);
+  }, [sessionId, fetchState, adminCode]);
 
   if (error) {
     return (
