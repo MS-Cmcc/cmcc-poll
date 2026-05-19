@@ -85,12 +85,14 @@ export default function ControlPage() {
         body: JSON.stringify({ action }),
       });
       if (res.ok) {
-        await fetchState();
         if (action === "end") {
+          window.open(`/admin/results/${session.id}`, "_blank");
           localStorage.removeItem("admin_session");
           setSession(null);
           setState(null);
           setConfirmEnd(false);
+        } else {
+          await fetchState();
         }
       }
     } finally {

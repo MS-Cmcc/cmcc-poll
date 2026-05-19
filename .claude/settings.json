@@ -11,11 +11,14 @@
       "Read(//Users/mscuro/.nvm/versions/node/**)",
       "Bash(~/.nvm/versions/node/v22.13.1/bin/node ~/.nvm/versions/node/v22.13.1/bin/npm run build)",
       "Bash(~/.nvm/versions/node/v20.19.5/bin/node --version)",
-      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v20.19.5/bin:__TRACKED_VAR__ npm run build)"
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v20.19.5/bin:__TRACKED_VAR__ npm run build)",
+      "Bash(mkdir -p \"/Users/mscuro/Documents/github/cmcc-poll/app/api/admin/sessions/[id]/results\")",
+      "Bash(mkdir -p \"/Users/mscuro/Documents/github/cmcc-poll/app/admin/results/[id]\")"
     ],
     "additionalDirectories": [
       "/Users/mscuro/Documents/github/cmcc-poll/app/api/admin/sessions/[id]",
-      "/Users/mscuro/Documents/github/cmcc-poll/app/api/sessions/[id]/questions"
+      "/Users/mscuro/Documents/github/cmcc-poll/app/api/sessions/[id]/questions",
+      "/Users/mscuro/Documents/github/cmcc-poll/app/admin/results"
     ]
   }
 }

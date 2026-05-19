@@ -4,10 +4,13 @@ import type { Question } from "@/lib/md/schemas";
 
 export interface AdminSessionState {
   id: string;
+  code: string;
   status: Session["status"];
   current_question_index: number;
   questions_snapshot: Question[];
   participantCount: number;
+  started_at: string | null;
+  ended_at: string | null;
 }
 
 export async function getSessionByCode(code: string): Promise<Session | null> {
@@ -49,9 +52,12 @@ export async function getSessionStateForAdmin(id: string): Promise<AdminSessionS
     .from("sessions")
     .select(`
       id,
+      code,
       status,
       current_question_index,
       questions_snapshot,
+      started_at,
+      ended_at,
       participants(count)
     `)
     .eq("id", id)
@@ -61,10 +67,13 @@ export async function getSessionStateForAdmin(id: string): Promise<AdminSessionS
   const participantCount = (data.participants as unknown as { count: number }[])[0]?.count ?? 0;
   return {
     id: data.id,
+    code: data.code,
     status: data.status as Session["status"],
     current_question_index: data.current_question_index,
     questions_snapshot: data.questions_snapshot as unknown as Question[],
     participantCount,
+    started_at: data.started_at ?? null,
+    ended_at: data.ended_at ?? null,
   };
 }
 
