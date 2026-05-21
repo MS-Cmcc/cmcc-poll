@@ -1,39 +1,57 @@
 ---
 type: single_choice
-question: What's your primary role?
+question: How often do you use AI tools in your daily research work?
 options:
-  - Developer
-  - Designer
-  - Product Manager
-  - Other
+  - Every day
+  - A few times a week
+  - Occasionally
+  - Rarely or never
 ---
 
 ---
 type: multiple_choice
-question: Which technologies do you use daily?
+question: Which AI tools do you use most in your research work? (select all that apply)
 options:
-  - JavaScript
-  - Python
-  - Docker
-  - Kubernetes
-  - SQL
+  - ChatGPT
+  - Claude
+  - Gemini
+  - GitHub Copilot
+  - Grok
+  - Other
 ---
 
 ---
 type: scale
-question: How would you rate your experience with live coding sessions?
+question: How confident do you feel in using AI tools effectively in your research workflow?
 min: 0
 max: 10
-labels: ["Not at all", "Extremely positive"]
+labels: ["Not at all", "Very confident"]
 ---
 
 ---
 type: word_cloud
-question: Describe today's session in one word
+question: In your daily research work, what task would you most like AI to help you with?
+max_words: 5
+---
+
+---
+type: word_cloud
+question: Is there an AI tool you would strongly recommend to everyone?
 max_words: 2
 ---
 
 ---
 type: open_ended
-question: What's one thing you'd like to see in the next session?
+question: What is the biggest friction point in your research workflow that AI could realistically solve?
+---
+
+---
+type: multiple_choice
+question: What is your main concern about using AI in your research?
+options:
+  - Reliability and reproducibility of results
+  - Data privacy and security
+  - Loss of scientific control
+  - Lack of skills or training
+  - I don't have major concerns
 ---
