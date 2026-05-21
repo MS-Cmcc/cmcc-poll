@@ -5,17 +5,27 @@ import { getVotesForSession } from "@/lib/db/queries";
 import type { Question } from "@/lib/md/schemas";
 
 type Aggregate =
+  | { type: "single_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "multiple_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "word_cloud"; freq: Record<string, number>; totalVotes: number }
   | { type: "open_ended"; texts: string[]; totalVotes: number }
   | { type: "scale"; mean: number | null; distribution: Record<number, number>; values: number[]; totalVotes: number; min: number; max: number; labels?: string[] };
 
 function computeAggregate(question: Question, votes: { value: Record<string, unknown> }[]): Aggregate {
-  if (question.type === "multiple_choice") {
+  if (question.type === "single_choice") {
     const counts = new Array<number>(question.options.length).fill(0);
     for (const v of votes) {
       const idx = (v.value as { option_index: number }).option_index;
       if (idx >= 0 && idx < counts.length) counts[idx]++;
+    }
+    return { type: "single_choice", options: question.options, counts, totalVotes: votes.length };
+  }
+  if (question.type === "multiple_choice") {
+    const counts = new Array<number>(question.options.length).fill(0);
+    for (const v of votes) {
+      for (const idx of (v.value as { option_indices: number[] }).option_indices ?? []) {
+        if (idx >= 0 && idx < counts.length) counts[idx]++;
+      }
     }
     return { type: "multiple_choice", options: question.options, counts, totalVotes: votes.length };
   }

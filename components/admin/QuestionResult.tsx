@@ -6,6 +6,7 @@ import {
 import WordCloud from "@/components/shared/WordCloud";
 
 type Aggregate =
+  | { type: "single_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "multiple_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "word_cloud"; freq: Record<string, number>; totalVotes: number }
   | { type: "open_ended"; texts: string[]; totalVotes: number }
@@ -27,9 +28,11 @@ export default function QuestionResult({ index, questionText, aggregate }: Props
         <h2 className="text-lg font-semibold mt-0.5 print:text-gray-900">{questionText}</h2>
       </div>
 
-      {aggregate.type === "multiple_choice" && (
+      {(aggregate.type === "single_choice" || aggregate.type === "multiple_choice") && (
         <div>
-          <p className="text-sm text-gray-400 mb-3 print:text-gray-500">{aggregate.totalVotes} votes</p>
+          <p className="text-sm text-gray-400 mb-3 print:text-gray-500">
+            {aggregate.totalVotes} {aggregate.type === "multiple_choice" ? "responses" : "votes"}
+          </p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart
               data={aggregate.options.map((opt, i) => ({ name: opt, count: aggregate.counts[i] ?? 0 }))}

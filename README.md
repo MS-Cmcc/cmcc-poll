@@ -2,7 +2,7 @@
 
 A self-hosted, real-time audience polling tool built for live events. Inspired by Mentimeter — but fully under your control, free to run, and simple enough to trust on stage.
 
-> Built with Next.js 15, Supabase, and zero drama.
+> Built with Next.js 16, Supabase, and zero drama.
 
 ---
 
@@ -24,12 +24,22 @@ The presenter authors questions in a plain `questions.md` file committed to the 
 
 ```markdown
 ---
-type: multiple_choice
-question: What's your favorite approach?
+type: single_choice
+question: What's your primary role?
 options:
-  - Option A
-  - Option B
-  - Option C
+  - Developer
+  - Designer
+  - Other
+---
+
+---
+type: multiple_choice
+question: Which technologies do you use daily?
+options:
+  - JavaScript
+  - Python
+  - Docker
+  - SQL
 ---
 
 ---
@@ -51,6 +61,26 @@ type: open_ended
 question: What would you like to learn next?
 ---
 ```
+
+| Type | Input | Notes |
+|---|---|---|
+| `single_choice` | Radio buttons — one answer only | 2–10 options |
+| `multiple_choice` | Checkboxes — one or more answers | 2–10 options |
+| `scale` | Slider/numeric | Integer range, optional labels |
+| `word_cloud` | Free text | 1–5 words per response, `max_words` default 3 |
+| `open_ended` | Text area | Up to 2000 characters |
+
+---
+
+## Session results
+
+When the presenter clicks **End Session**, a results page opens automatically in a new tab at `/admin/results/:id`. It shows:
+
+- Per-question charts (bar charts, word clouds, response lists)
+- **Export PDF** — browser print dialog, chart-friendly layout
+- **Export CSV** — one section per question with counts and percentages
+
+The results endpoint (`GET /api/admin/sessions/:id/results`) requires the admin code and only returns data for ended sessions.
 
 ---
 
@@ -113,6 +143,8 @@ npm run dev
 3. Add the same environment variables from `.env.local` in the Vercel project settings
 4. Deploy — Vercel auto-deploys on every push to `main`
 
+Preview deployments are created automatically for every non-`main` branch.
+
 ---
 
 ## Pre-event checklist
@@ -125,7 +157,7 @@ Run through this **15 minutes before going live**:
 - [ ] Open `/admin/control` on your phone, enter admin code, start a **test** session
 - [ ] Scan the QR with the laptop — display panel loads and shows the join code
 - [ ] Join from a second phone, vote on the first question, verify it appears on the laptop
-- [ ] End the test session
+- [ ] End the test session — results page opens automatically
 - [ ] Go live within 30 minutes (to avoid Vercel cold starts)
 
 ---
@@ -133,7 +165,9 @@ Run through this **15 minutes before going live**:
 ## Architecture notes
 
 - **Questions live in `questions.md`**, not in the database. The DB only stores runtime state: sessions, participants, votes.
-- **Only the display panel uses Supabase Realtime.** The audience and the control panel use HTTP polling (2s interval) — this keeps realtime connections at 1, well within the free tier.
+- **Audience polling is minimal by design.** `GET /api/sessions/:id/state` returns only 4 fields (no question data, no participant count). The audience client fetches the current question separately, only when the index changes — not on every 2s poll.
+- **Admin endpoints are split from public ones.** `GET /api/admin/sessions/:id/state` (requires `X-Admin-Code`) returns the full payload including participant count. The control panel and display panel use this endpoint.
+- **Only the display panel uses Supabase Realtime.** The audience and the control panel use HTTP polling (2s/3s interval) — this keeps realtime connections at 1, well within the free tier.
 - **One vote per participant per question** is enforced by a DB `UNIQUE` constraint, not just application logic.
 - **Anonymous participants** — no login, no PII. Each device generates a UUID stored in `localStorage`.
 

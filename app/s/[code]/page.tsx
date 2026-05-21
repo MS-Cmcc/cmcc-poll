@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
+import SingleChoiceInput from "@/components/audience/SingleChoiceInput";
 import MultipleChoiceInput from "@/components/audience/MultipleChoiceInput";
 import WordCloudInput from "@/components/audience/WordCloudInput";
 import OpenEndedInput from "@/components/audience/OpenEndedInput";
 import ScaleInput from "@/components/audience/ScaleInput";
 import type {
   Question,
+  SingleChoiceQuestion,
   MultipleChoiceQuestion,
   WordCloudQuestion,
   ScaleQuestion,
@@ -248,6 +250,12 @@ export default function AudiencePage({ params }: { params: Promise<{ code: strin
 
       {submitError && <p className="text-red-400 text-sm">{submitError}</p>}
 
+      {q.type === "single_choice" && (
+        <SingleChoiceInput
+          options={(q as SingleChoiceQuestion).options}
+          onSubmit={(v) => handleVote(v)}
+        />
+      )}
       {q.type === "multiple_choice" && (
         <MultipleChoiceInput
           options={(q as MultipleChoiceQuestion).options}

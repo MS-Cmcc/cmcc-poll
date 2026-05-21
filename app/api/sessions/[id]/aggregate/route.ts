@@ -39,12 +39,21 @@ export async function GET(
 
   let aggregate: unknown;
 
-  if (question.type === "multiple_choice") {
+  if (question.type === "single_choice") {
     const counts: number[] = new Array(question.options.length).fill(0);
     for (const v of votes) {
       const val = v.value as { option_index: number };
       if (val.option_index >= 0 && val.option_index < counts.length) {
         counts[val.option_index]++;
+      }
+    }
+    aggregate = { type: "single_choice", counts, options: question.options, totalVotes };
+  } else if (question.type === "multiple_choice") {
+    const counts: number[] = new Array(question.options.length).fill(0);
+    for (const v of votes) {
+      const val = v.value as { option_indices: number[] };
+      for (const idx of val.option_indices ?? []) {
+        if (idx >= 0 && idx < counts.length) counts[idx]++;
       }
     }
     aggregate = { type: "multiple_choice", counts, options: question.options, totalVotes };

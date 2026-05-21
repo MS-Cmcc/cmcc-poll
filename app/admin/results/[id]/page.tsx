@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import QuestionResult from "@/components/admin/QuestionResult";
 
 type Aggregate =
+  | { type: "single_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "multiple_choice"; options: string[]; counts: number[]; totalVotes: number }
   | { type: "word_cloud"; freq: Record<string, number>; totalVotes: number }
   | { type: "open_ended"; texts: string[]; totalVotes: number }
@@ -49,7 +50,7 @@ function generateCsv(results: Results): string {
     const { index, question, aggregate } = q;
     lines.push(`--- Q${index + 1}: ${question.question.replace(/,/g, ";")} (${question.type}) --- ${aggregate.totalVotes} votes ---`);
 
-    if (aggregate.type === "multiple_choice") {
+    if (aggregate.type === "single_choice" || aggregate.type === "multiple_choice") {
       lines.push("Option,Count,Percentage");
       for (let i = 0; i < aggregate.options.length; i++) {
         const count = aggregate.counts[i] ?? 0;

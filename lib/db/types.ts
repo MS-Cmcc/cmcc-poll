@@ -1,7 +1,7 @@
 import type { Question } from "@/lib/md/schemas";
 
 export type SessionStatus = "draft" | "active" | "ended";
-export type QuestionType = "multiple_choice" | "word_cloud" | "open_ended" | "scale";
+export type QuestionType = "single_choice" | "multiple_choice" | "word_cloud" | "open_ended" | "scale";
 
 export interface Session {
   id: string;

@@ -6,6 +6,13 @@ import {
 } from "recharts";
 import WordCloud from "@/components/shared/WordCloud";
 
+interface SingleChoiceAggregate {
+  type: "single_choice";
+  counts: number[];
+  options: string[];
+  totalVotes: number;
+}
+
 interface MultipleChoiceAggregate {
   type: "multiple_choice";
   counts: number[];
@@ -36,7 +43,7 @@ interface ScaleAggregate {
   labels?: string[];
 }
 
-type Aggregate = MultipleChoiceAggregate | WordCloudAggregate | OpenEndedAggregate | ScaleAggregate;
+type Aggregate = SingleChoiceAggregate | MultipleChoiceAggregate | WordCloudAggregate | OpenEndedAggregate | ScaleAggregate;
 
 interface Props {
   sessionId: string;
@@ -77,14 +84,15 @@ export default function AggregateDisplay({ sessionId, questionIndex, questionTyp
 
   if (!aggregate) return <div className="text-gray-500 text-sm">Loading results…</div>;
 
-  if (aggregate.type === "multiple_choice") {
+  if (aggregate.type === "single_choice" || aggregate.type === "multiple_choice") {
     const data = aggregate.options.map((opt, i) => ({
       name: opt,
       count: aggregate.counts[i] ?? 0,
     }));
+    const label = aggregate.type === "multiple_choice" ? "responses" : "votes";
     return (
       <div className="w-full">
-        <p className="text-sm text-gray-400 mb-3">{aggregate.totalVotes} votes</p>
+        <p className="text-sm text-gray-400 mb-3">{aggregate.totalVotes} {label}</p>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 40 }}>
             <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 13 }} angle={-20} textAnchor="end" interval={0} />
