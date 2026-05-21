@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionById, hasVoted } from "@/lib/db/queries";
 import { getServiceClient } from "@/lib/db/client";
 import { VoteValueSchema } from "@/lib/md/schemas";
-import type { Question, MultipleChoiceQuestion, ScaleQuestion, WordCloudQuestion } from "@/lib/md/schemas";
+import type { Question, SingleChoiceQuestion, MultipleChoiceQuestion, ScaleQuestion, WordCloudQuestion } from "@/lib/md/schemas";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -17,11 +17,18 @@ function validateVoteValue(question: Question, raw: Record<string, unknown>) {
 }
 
 function validateValueBounds(question: Question, value: Record<string, unknown>): string | null {
-  if (question.type === "multiple_choice") {
-    const q = question as MultipleChoiceQuestion;
+  if (question.type === "single_choice") {
+    const q = question as SingleChoiceQuestion;
     const idx = (value as { option_index: number }).option_index;
     if (idx < 0 || idx >= q.options.length) {
       return `option_index out of range (0-${q.options.length - 1})`;
+    }
+  }
+  if (question.type === "multiple_choice") {
+    const q = question as MultipleChoiceQuestion;
+    const indices = (value as { option_indices: number[] }).option_indices ?? [];
+    if (indices.some((idx) => idx < 0 || idx >= q.options.length)) {
+      return `option_indices out of range (0-${q.options.length - 1})`;
     }
   }
   if (question.type === "scale") {

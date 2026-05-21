@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS votes (
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
   question_index INT NOT NULL,
-  question_type TEXT NOT NULL CHECK (question_type IN ('multiple_choice', 'word_cloud', 'open_ended', 'scale')),
+  question_type TEXT NOT NULL CHECK (question_type IN ('single_choice', 'multiple_choice', 'word_cloud', 'open_ended', 'scale')),
   value JSONB NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (session_id, participant_id, question_index)
