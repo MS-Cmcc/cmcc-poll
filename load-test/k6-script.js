@@ -37,6 +37,7 @@ if (!BASE_URL || !ADMIN_CODE) {
 const stateLatency = new Trend("latency_state", true);
 const voteLatency = new Trend("latency_vote", true);
 const joinLatency = new Trend("latency_join", true);
+const questionLatency = new Trend("latency_question", true);
 const votesSubmitted = new Counter("votes_submitted");
 const votesRejected = new Counter("votes_rejected");
 
@@ -64,6 +65,7 @@ export const options = {
     "latency_state": ["p(95)<800"], // p95 of /state under 800ms
     "latency_vote": ["p(95)<1500"], // p95 of /vote under 1.5s
     "latency_join": ["p(95)<2000"], // p95 of join flow under 2s
+    "latency_question": ["p(95)<800"], // p95 of /questions/[idx] under 800ms
   },
   summaryTrendStats: ["min", "avg", "med", "p(90)", "p(95)", "p(99)", "max"],
 };
@@ -110,6 +112,24 @@ function sampleSentence() {
   return SENTENCES[randInt(0, SENTENCES.length - 1)];
 }
 
+// Fetch the question object at a given index. Returns null on any failure.
+function fetchQuestion(sessionId, index) {
+  const res = http.get(
+    `${BASE_URL}/api/sessions/${sessionId}/questions/${index}`,
+    { tags: { endpoint: "question" } }
+  );
+  questionLatency.add(res.timings.duration);
+  if (res.status !== 200) {
+    return null;
+  }
+  try {
+    const body = res.json();
+    return body.question ?? null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 // Build a vote payload appropriate for the given question.
 // Works dynamically against any questions.md.
 function voteValueFor(question) {
@@ -154,11 +174,16 @@ export function setup() {
   }
 
   const session = res.json("session");
+  const displayUrl = session.display_token
+    ? `${BASE_URL}/admin/display?token=${session.display_token}`
+    : "(display_token not present in response)";
+
   console.log("=".repeat(60));
   console.log(`SESSION CREATED`);
   console.log(`  code:        ${session.code}`);
   console.log(`  id:          ${session.id}`);
   console.log(`  join URL:    ${BASE_URL}/s/${session.code}`);
+  console.log(`  display URL: ${displayUrl}`);
   console.log("=".repeat(60));
 
   return { sessionId: session.id, code: session.code };
@@ -231,10 +256,15 @@ export function audience(data) {
     }
 
     const currentIdx = state.currentQuestionIndex;
-    const currentQuestion = state.currentQuestion;
 
-    if (currentQuestion && currentIdx > lastVotedIndex) {
-      // New question detected — simulate human "think time" before voting
+    if (currentIdx > lastVotedIndex) {
+      // New question detected — fetch it, then simulate "think time" before voting
+      const currentQuestion = fetchQuestion(sessionId, currentIdx);
+      if (!currentQuestion) {
+        sleep(2);
+        continue;
+      }
+
       const thinkTime = 3 + Math.random() * 12; // 3 to 15 seconds
       sleep(thinkTime);
 
@@ -251,7 +281,9 @@ export function audience(data) {
       if (freshState.status === "ended") break;
 
       const voteIdx = freshState.currentQuestionIndex;
-      const voteQuestion = freshState.currentQuestion;
+      // If the question index changed under us, fetch the new one; otherwise reuse
+      const voteQuestion =
+        voteIdx === currentIdx ? currentQuestion : fetchQuestion(sessionId, voteIdx);
       if (!voteQuestion) {
         sleep(2);
         continue;
