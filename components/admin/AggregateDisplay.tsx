@@ -91,18 +91,20 @@ export default function AggregateDisplay({ sessionId, questionIndex, questionTyp
     }));
     const label = aggregate.type === "multiple_choice" ? "responses" : "votes";
     return (
-      <div className="w-full">
-        <p className="text-sm text-gray-400 mb-3">{aggregate.totalVotes} {label}</p>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 40 }}>
-            <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 13 }} angle={-20} textAnchor="end" interval={0} />
-            <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} allowDecimals={false} />
-            <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
-            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-              {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="w-full h-full flex flex-col">
+        <p className="text-sm text-gray-400 mb-3 shrink-0">{aggregate.totalVotes} {label}</p>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 80 }}>
+              <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 14 }} angle={-25} textAnchor="end" interval={0} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 13 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     );
   }
@@ -137,27 +139,29 @@ export default function AggregateDisplay({ sessionId, questionIndex, questionTyp
       distData.push({ value: v, count: aggregate.distribution[v] ?? 0 });
     }
     return (
-      <div className="w-full">
-        <p className="text-sm text-gray-400 mb-1">{aggregate.totalVotes} votes</p>
+      <div className="w-full h-full flex flex-col">
+        <p className="text-sm text-gray-400 mb-1 shrink-0">{aggregate.totalVotes} votes</p>
         {aggregate.mean !== null && (
-          <p className="text-4xl font-bold mb-4 text-indigo-400">
+          <p className="text-4xl font-bold mb-4 text-indigo-400 shrink-0">
             Avg: {aggregate.mean.toFixed(1)}
           </p>
         )}
         {aggregate.labels && (
-          <div className="flex justify-between text-xs text-gray-400 mb-2">
+          <div className="flex justify-between text-xs text-gray-400 mb-2 shrink-0">
             <span>{aggregate.labels[0]}</span>
             <span>{aggregate.labels[1]}</span>
           </div>
         )}
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={distData} margin={{ left: 0, right: 0 }}>
-            <XAxis dataKey="value" tick={{ fill: "#d1d5db", fontSize: 11 }} />
-            <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} allowDecimals={false} />
-            <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
-            <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={distData} margin={{ left: 0, right: 0 }}>
+              <XAxis dataKey="value" tick={{ fill: "#d1d5db", fontSize: 13 }} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 13 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
+              <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     );
   }

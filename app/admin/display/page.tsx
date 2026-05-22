@@ -104,9 +104,9 @@ function DisplayContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col p-8 gap-6">
+    <div className="h-screen flex flex-col p-8 gap-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start shrink-0">
         <div>
           <p className="text-gray-400 text-sm">Question {state.currentQuestionIndex + 1} / {state.totalQuestions}</p>
           <h1 className="text-3xl font-bold mt-1 max-w-3xl">
@@ -121,7 +121,7 @@ function DisplayContent() {
 
       {/* Aggregate visualization */}
       {sessionId && state.currentQuestion && (
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           <AggregateDisplay
             sessionId={sessionId}
             questionIndex={state.currentQuestionIndex}
