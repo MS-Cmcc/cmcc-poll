@@ -1,0 +1,57 @@
+name: Load test (k6)
+
+# Manual trigger only — never run automatically on push.
+# A load test against production creates real sessions in the DB,
+# so we want it to be a deliberate action.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Base URL of the deployment to test"
+        required: true
+        default: "https://cmcc-poll.vercel.app"
+      vus:
+        description: "Number of virtual users (audience size)"
+        required: true
+        default: "200"
+      question_duration_s:
+        description: "Seconds the controller waits between question advances"
+        required: true
+        default: "45"
+      ramp_up_s:
+        description: "Seconds over which audience trickles in"
+        required: true
+        default: "30"
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 load test
+        uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          ADMIN_CODE: ${{ secrets.ADMIN_CODE }}
+          VUS: ${{ inputs.vus }}
+          QUESTION_DURATION_S: ${{ inputs.question_duration_s }}
+          RAMP_UP_S: ${{ inputs.ramp_up_s }}
+          AUDIENCE_DURATION_S: "600"
+        with:
+          path: ./load-test/k6-script.js
+          flags: --summary-export=k6-summary.json
+
+      - name: Upload k6 summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: k6-summary.json
+          retention-days: 30
