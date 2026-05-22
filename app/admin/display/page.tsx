@@ -121,7 +121,7 @@ function DisplayContent() {
 
       {/* Aggregate visualization */}
       {sessionId && state.currentQuestion && (
-        <div className="flex-1 min-h-0">
+        <div className="flex-1">
           <AggregateDisplay
             sessionId={sessionId}
             questionIndex={state.currentQuestionIndex}

@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Recharts: allow rotated XAxis labels to render outside the SVG viewport */
+.recharts-wrapper,
+.recharts-wrapper svg {
+  overflow: visible !important;
+}
