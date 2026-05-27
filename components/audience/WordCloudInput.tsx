@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface Props {
   maxWords: number;
@@ -12,12 +12,17 @@ export default function WordCloudInput({ maxWords, onSubmit, disabled }: Props) 
   const [words, setWords] = useState<string[]>([]);
   const [current, setCurrent] = useState("");
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function addWord() {
     const trimmed = current.trim().toLowerCase();
     if (!trimmed || words.includes(trimmed) || words.length >= maxWords) return;
     setWords([...words, trimmed]);
     setCurrent("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.focus();
+    }
   }
 
   function removeWord(w: string) {
@@ -56,6 +61,7 @@ export default function WordCloudInput({ maxWords, onSubmit, disabled }: Props) 
       {words.length < maxWords && (
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
