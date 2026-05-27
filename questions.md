@@ -80,7 +80,7 @@ labels: ["Only suggestions", "Full autonomous execution"]
 ---
 
 ---
-type: multiple_choice
+type: single_choice
 question: Would you feel confident using agentic AI systems in your scientific activities?
 options:
   - Yes
