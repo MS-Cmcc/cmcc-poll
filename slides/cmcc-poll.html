@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>cmcc-poll — How We Built It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080D18;
+    --bg-2:      #0E1629;
+    --bg-card:   rgba(255,255,255,0.038);
+    --border:    rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.14);
+    --green:     #00D48A;
+    --green-dim: rgba(0,212,138,0.12);
+    --blue:      #4B8EFA;
+    --blue-dim:  rgba(75,142,250,0.12);
+    --text:      #EEF2FF;
+    --muted:     #6B7FA3;
+    --muted-hi:  #94A3B8;
+    --font-h:    'Syne', sans-serif;
+    --font-b:    'DM Sans', sans-serif;
+    --font-m:    'IBM Plex Mono', monospace;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-b);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .deck { position: relative; width: 100%; height: 100%; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 50px 72px 48px;
+    opacity: 0; pointer-events: none;
+    transform: translateX(40px);
+    transition: opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1);
+  }
+  .slide.active  { opacity: 1; pointer-events: all; transform: translateX(0); }
+  .slide.out-left { opacity: 0; transform: translateX(-40px);
+    transition: opacity .3s ease, transform .3s ease; }
+
+  .slide::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.016) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.016) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(14,22,41,.9); border: 1px solid var(--border-hi);
+    border-radius: 40px; padding: 10px 20px;
+    backdrop-filter: blur(14px); z-index: 100;
+  }
+  .nav-btn {
+    width: 34px; height: 34px; border: 1px solid var(--border-hi);
+    border-radius: 50%; background: var(--bg-card);
+    color: var(--muted-hi); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s, border-color .2s; font-size: 14px;
+  }
+  .nav-btn:hover { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+  .nav-btn:disabled { opacity: .3; cursor: default; }
+  .nav-dots { display: flex; gap: 8px; align-items: center; padding: 0 6px; }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border-hi); cursor: pointer;
+    transition: background .25s, transform .25s;
+  }
+  .dot.active { background: var(--green); transform: scale(1.4); }
+  .slide-counter {
+    font-family: var(--font-m); font-size: 11px;
+    color: var(--muted); padding-left: 4px; min-width: 36px; text-align: right;
+  }
+
+  /* SLIDE HEADER */
+  .slide-tag {
+    font-family: var(--font-m); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--green);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 24px;
+  }
+  .slide-tag::before { content: ''; display: block; width: 28px; height: 1px; background: var(--green); }
+
+  h1.slide-title {
+    font-family: var(--font-h); font-size: 50px; font-weight: 800;
+    line-height: 1.07; letter-spacing: -.025em;
+    color: var(--text); margin-bottom: 14px;
+  }
+  h1.slide-title em { color: var(--green); font-style: normal; }
+
+  .slide-sub {
+    font-size: 15.5px; color: var(--muted-hi); font-weight: 300;
+    line-height: 1.5; max-width: 600px; margin-bottom: 36px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 26px 28px;
+  }
+  .card-title {
+    font-family: var(--font-h); font-size: 11px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); display:block; }
+
+  /* SLIDE 1 */
+  .s1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; align-content: start; }
+
+  .context-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 13px; }
+  .context-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--green-dim); border: 1px solid rgba(0,212,138,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 2px;
+  }
+  .context-label { font-size: 14px; color: var(--muted-hi); font-weight: 300; line-height: 1.45; }
+  .context-label strong { color: var(--text); font-weight: 500; }
+
+  .phase-list { list-style: none; }
+  .phase-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px; color: var(--muted-hi); font-weight: 300; line-height: 1.4;
+  }
+  .phase-list li:last-child { border: none; padding-bottom: 0; }
+  .phase-num {
+    font-family: var(--font-m); font-size: 10px; color: var(--green);
+    background: var(--green-dim); border-radius: 4px;
+    padding: 2px 6px; flex-shrink: 0; margin-top: 2px;
+  }
+  .phase-list li strong { color: var(--text); font-weight: 500; }
+
+  .claude-badge {
+    margin-top: 16px; border: 1px solid var(--green);
+    border-radius: 10px; padding: 13px 16px;
+    background: var(--green-dim);
+    font-family: var(--font-m); font-size: 11.5px;
+    color: var(--green); line-height: 1.5;
+  }
+
+  /* SLIDE 2 */
+  .stack-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; flex:1; align-content:start; }
+  .stack-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden;
+    transition: border-color .25s, background .25s;
+  }
+  .stack-card:hover { border-color: var(--border-hi); background: rgba(255,255,255,.055); }
+  .stack-card::after {
+    content:''; position:absolute; top:0; left:0;
+    width:100%; height:2px; background:var(--accent-color, var(--green)); opacity:.65;
+  }
+  .stack-layer { font-family:var(--font-m); font-size:9.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+  .stack-tool { font-family:var(--font-h); font-size:17px; font-weight:700; color:var(--text); margin-bottom:5px; }
+  .stack-desc { font-size:12px; color:var(--muted-hi); font-weight:300; line-height:1.45; }
+  .free-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--green-dim); border:1px solid rgba(0,212,138,.3);
+    color:var(--green); border-radius:4px;
+    font-family:var(--font-m); font-size:10px; padding:2px 7px; margin-top:8px;
+  }
+  .arch-note {
+    margin-top: 20px; background: var(--blue-dim);
+    border: 1px solid rgba(75,142,250,.25); border-radius: 10px;
+    padding: 13px 18px; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .arch-note-icon { font-size:17px; flex-shrink:0; margin-top:1px; }
+  .arch-note-text { font-size:13px; color:var(--muted-hi); font-weight:300; line-height:1.5; }
+  .arch-note-text strong { color:var(--blue); font-weight:500; }
+
+  /* SLIDE 3 */
+  .s3-grid { display:grid; grid-template-columns:1.05fr 1fr; gap:28px; flex:1; align-content:start; }
+  .question-types { display:flex; flex-direction:column; gap:10px; }
+  .qtype {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:10px; padding:12px 16px;
+    display:flex; align-items:center; gap:14px;
+    transition:border-color .2s;
+  }
+  .qtype:hover { border-color:var(--border-hi); }
+  .qtype-icon {
+    width:34px; height:34px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; flex-shrink:0;
+  }
+  .qtype-name { font-family:var(--font-h); font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:1px; }
+  .qtype-desc { font-size:11.5px; color:var(--muted); font-weight:300; }
+
+  .code-panel {
+    background:#030711; border:1px solid var(--border-hi);
+    border-radius:12px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .code-bar {
+    display:flex; align-items:center; gap:7px; padding:10px 16px;
+    border-bottom:1px solid var(--border); background:rgba(255,255,255,.025);
+  }
+  .win-btn { width:11px; height:11px; border-radius:50%; }
+  .win-btn.r{background:#FF5F57;} .win-btn.y{background:#FEBC2E;} .win-btn.g{background:#28C840;}
+  .code-filename { font-family:var(--font-m); font-size:11px; color:var(--muted); margin-left:8px; }
+  .code-body { padding:18px 20px; flex:1; font-family:var(--font-m); font-size:11.5px; line-height:1.65; overflow:auto; }
+  pre { margin:0; white-space:pre; }
+  .tok-key   { color:#7DD3FC; }
+  .tok-val   { color:#86EFAC; }
+  .tok-str   { color:#FCA5A5; }
+  .tok-sep   { color:var(--muted); }
+  .tok-type  { color:var(--green); font-weight:500; }
+  .tok-num   { color:#FDE68A; }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- SLIDE 0 — JOIN -->
+  <section class="slide active" id="slide-0">
+    <div style="
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:0; padding:48px;
+    ">
+      <!-- Glowing ring behind QR -->
+      <div style="position:relative; margin-bottom:40px;">
+        <div style="
+          position:absolute; inset:-20px; border-radius:50%;
+          background: radial-gradient(circle, rgba(0,212,138,.18) 0%, transparent 70%);
+          animation: pulse 3s ease-in-out infinite;
+        "></div>
+        <div style="
+          width:260px; height:260px; border-radius:20px;
+          background:#fff; padding:14px;
+          display:flex; align-items:center; justify-content:center;
+          box-shadow: 0 0 60px rgba(0,212,138,.25), 0 0 0 1px rgba(0,212,138,.3);
+          position:relative; z-index:1;
+        ">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=232x232&data=https%3A%2F%2Fcmcc-poll.vercel.app%2F&bgcolor=ffffff&color=000000&margin=0&qzone=1&format=svg"
+            width="232" height="232"
+            alt="QR code — cmcc-poll.vercel.app"
+            style="display:block; border-radius:4px;"
+          />
+        </div>
+      </div>
+
+      <div style="text-align:center;">
+        <div style="
+          font-family:var(--font-m); font-size:12px; letter-spacing:.14em;
+          text-transform:uppercase; color:var(--green); margin-bottom:14px;
+          display:flex; align-items:center; justify-content:center; gap:8px;
+        ">
+          <span style="display:block;width:28px;height:1px;background:var(--green)"></span>
+          Scan to join the poll
+          <span style="display:block;width:28px;height:1px;background:var(--green)"></span>
+        </div>
+
+        <div style="
+          font-family:var(--font-h); font-size:48px; font-weight:800;
+          color:var(--text); letter-spacing:-.02em; margin-bottom:8px;
+        ">cmcc-poll.vercel.app</div>
+
+        <div style="
+          font-family:var(--font-m); font-size:14px; color:var(--muted);
+        ">or type the URL in your browser</div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: .7; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+    </style>
+  </section>
+
+  <!-- SLIDE 1 (was SLIDE 1) -->
+  <section class="slide" id="slide-1-approach">
+    <div class="slide-tag">01 — Approach</div>
+    <h1 class="slide-title">Spec first.<br/><em>Code second.</em></h1>
+    <p class="slide-sub">We built a live polling tool for 200 concurrent users in 2 weeks, solo. No wasted sprints. No rework. Because we defined everything before touching the codebase.</p>
+
+    <div class="s1-grid">
+      <div class="card">
+        <div class="card-title">The constraints</div>
+        <div class="context-item">
+          <div class="context-icon">🎯</div>
+          <div class="context-label"><strong>200 concurrent users</strong> in a single live session</div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">⏱</div>
+          <div class="context-label"><strong>2-week deadline.</strong> One developer. Ship or die.</div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">💸</div>
+          <div class="context-label"><strong>Zero budget.</strong> Free tier only, no exceptions.</div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">♻️</div>
+          <div class="context-label">Questions <strong>versioned in Git.</strong> Reusable across events.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">The 7-phase discovery process</div>
+        <ul class="phase-list">
+          <li><span class="phase-num">01</span><div><strong>Discovery</strong> — context, constraints, target load</div></li>
+          <li><span class="phase-num">02</span><div><strong>MVP scope</strong> — what's in, what's out, and why</div></li>
+          <li><span class="phase-num">03</span><div><strong>Tech stack</strong> — every decision with a trade-off</div></li>
+          <li><span class="phase-num">04</span><div><strong>Data model</strong> — 3 entities, schema locked</div></li>
+          <li><span class="phase-num">05</span><div><strong>User flows</strong> — presenter and audience, end-to-end</div></li>
+          <li><span class="phase-num">06</span><div><strong>Technical risks</strong> — 5 identified, all mitigated</div></li>
+          <li><span class="phase-num">07</span><div><strong>CLAUDE.md</strong> — persistent spec fed into the coding agent</div></li>
+        </ul>
+        <div class="claude-badge">
+          📄 &nbsp;CLAUDE.md &rarr; permanent context loaded by Claude Code on every dev session
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 -->
+  <section class="slide" id="slide-1">
+    <div class="slide-tag">02 — Stack</div>
+    <h1 class="slide-title">Free tier.<br/><em>No compromises.</em></h1>
+    <p class="slide-sub">Two providers. Zero infrastructure to babysit on event day. If it doesn't run on a free plan, it didn't make the cut.</p>
+
+    <div class="stack-grid">
+      <div class="stack-card" style="--accent-color:#60A5FA;">
+        <div class="stack-layer">Framework</div>
+        <div class="stack-tool">Next.js 15</div>
+        <div class="stack-desc">App Router — frontend and API routes in one project. Auto-deploy from GitHub.</div>
+        <div class="free-badge">✓ Vercel Hobby</div>
+      </div>
+      <div class="stack-card" style="--accent-color:#00D48A;">
+        <div class="stack-layer">Database + Realtime</div>
+        <div class="stack-tool">Supabase</div>
+        <div class="stack-desc">Managed Postgres with built-in Realtime channels. One provider for data and live updates.</div>
+        <div class="free-badge">✓ Free tier</div>
+      </div>
+      <div class="stack-card" style="--accent-color:#F97316;">
+        <div class="stack-layer">Schema validation</div>
+        <div class="stack-tool">Zod</div>
+        <div class="stack-desc">Shared schemas across the Markdown parser and API layer. Catches bad configs before going live.</div>
+        <div class="free-badge">✓ Open source</div>
+      </div>
+      <div class="stack-card" style="--accent-color:#A78BFA;">
+        <div class="stack-layer">Question authoring</div>
+        <div class="stack-tool">gray-matter</div>
+        <div class="stack-desc">YAML frontmatter parser for <code style="font-size:11px;color:#A78BFA">questions.md</code>. Git-versioned. No GUI needed.</div>
+        <div class="free-badge">✓ Open source</div>
+      </div>
+      <div class="stack-card" style="--accent-color:#38BDF8;">
+        <div class="stack-layer">Styling</div>
+        <div class="stack-tool">Tailwind CSS 4</div>
+        <div class="stack-desc">Mobile-first for audience and control panel. Desktop-optimized for the projected display.</div>
+        <div class="free-badge">✓ Open source</div>
+      </div>
+      <div class="stack-card" style="--accent-color:#FB923C;">
+        <div class="stack-layer">Load testing</div>
+        <div class="stack-tool">k6</div>
+        <div class="stack-desc">200 virtual users, realistic voting behavior, ~6 min run. CLI or GitHub Actions — no infra needed.</div>
+        <div class="free-badge">✓ Open source</div>
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <div class="arch-note-icon">⚡</div>
+      <div class="arch-note-text">
+        <strong>Key call:</strong> only the projected laptop uses Supabase Realtime (1 connection, total). Audience and control panel use 2-second HTTP polling. Result: well under the free tier limit regardless of participant count.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide" id="slide-2">
+    <div class="slide-tag">03 — What We Shipped</div>
+    <h1 class="slide-title">5 question types.<br/><em>One file.</em></h1>
+    <p class="slide-sub">Every session is configured by a <code style="font-family:'IBM Plex Mono';font-size:15px;color:var(--green)">questions.md</code> in the repo. Edit it, commit it, run a new event. That's it.</p>
+
+    <div class="s3-grid">
+      <div class="question-types">
+        <div class="qtype">
+          <div class="qtype-icon" style="background:rgba(96,165,250,.12);">🔘</div>
+          <div>
+            <div class="qtype-name">Single Choice</div>
+            <div class="qtype-desc">Radio buttons — pick exactly one</div>
+          </div>
+        </div>
+        <div class="qtype">
+          <div class="qtype-icon" style="background:rgba(167,139,250,.12);">☑️</div>
+          <div>
+            <div class="qtype-name">Multiple Choice</div>
+            <div class="qtype-desc">Checkboxes — select all that apply</div>
+          </div>
+        </div>
+        <div class="qtype">
+          <div class="qtype-icon" style="background:rgba(0,212,138,.12);">☁️</div>
+          <div>
+            <div class="qtype-name">Word Cloud</div>
+            <div class="qtype-desc">Free text — word size scales with frequency</div>
+          </div>
+        </div>
+        <div class="qtype">
+          <div class="qtype-icon" style="background:rgba(251,146,60,.12);">💬</div>
+          <div>
+            <div class="qtype-name">Open-Ended</div>
+            <div class="qtype-desc">Free text — answers stream in live as cards</div>
+          </div>
+        </div>
+        <div class="qtype">
+          <div class="qtype-icon" style="background:rgba(251,191,36,.12);">📊</div>
+          <div>
+            <div class="qtype-name">Scale</div>
+            <div class="qtype-desc">Parametric slider — custom min/max, mean + distribution</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-panel">
+        <div class="code-bar">
+          <div class="win-btn r"></div><div class="win-btn y"></div><div class="win-btn g"></div>
+          <span class="code-filename">questions.md</span>
+        </div>
+        <div class="code-body">
+<pre><span class="tok-sep">---</span>
+<span class="tok-key">type</span><span class="tok-sep">: </span><span class="tok-type">single_choice</span>
+<span class="tok-key">question</span><span class="tok-sep">: </span><span class="tok-str">How often do you use AI tools?</span>
+<span class="tok-key">options</span><span class="tok-sep">:</span>
+  <span class="tok-sep">-</span> <span class="tok-str">Every day</span>
+  <span class="tok-sep">-</span> <span class="tok-str">A few times a week</span>
+  <span class="tok-sep">-</span> <span class="tok-str">Rarely or never</span>
+<span class="tok-sep">---</span>
+
+<span class="tok-sep">---</span>
+<span class="tok-key">type</span><span class="tok-sep">: </span><span class="tok-type">scale</span>
+<span class="tok-key">question</span><span class="tok-sep">: </span><span class="tok-str">How confident are you with AI?</span>
+<span class="tok-key">min</span><span class="tok-sep">: </span><span class="tok-num">0</span>
+<span class="tok-key">max</span><span class="tok-sep">: </span><span class="tok-num">10</span>
+<span class="tok-key">labels</span><span class="tok-sep">: </span><span class="tok-sep">[</span><span class="tok-str">"Not at all"</span><span class="tok-sep">, </span><span class="tok-str">"Very confident"</span><span class="tok-sep">]</span>
+<span class="tok-sep">---</span>
+
+<span class="tok-sep">---</span>
+<span class="tok-key">type</span><span class="tok-sep">: </span><span class="tok-type">word_cloud</span>
+<span class="tok-key">question</span><span class="tok-sep">: </span><span class="tok-str">One word for today's session?</span>
+<span class="tok-key">max_words</span><span class="tok-sep">: </span><span class="tok-num">3</span>
+<span class="tok-sep">---</span>
+
+<span class="tok-sep">---</span>
+<span class="tok-key">type</span><span class="tok-sep">: </span><span class="tok-type">open_ended</span>
+<span class="tok-key">question</span><span class="tok-sep">: </span><span class="tok-str">What would you learn next?</span>
+<span class="tok-sep">---</span>
+
+<span class="tok-sep">---</span>
+<span class="tok-key">type</span><span class="tok-sep">: </span><span class="tok-type">multiple_choice</span>
+<span class="tok-key">question</span><span class="tok-sep">: </span><span class="tok-str">Which AI tools do you use?</span>
+<span class="tok-key">options</span><span class="tok-sep">:</span>
+  <span class="tok-sep">-</span> <span class="tok-str">ChatGPT</span>
+  <span class="tok-sep">-</span> <span class="tok-str">Claude</span>
+  <span class="tok-sep">-</span> <span class="tok-str">Gemini</span>
+  <span class="tok-sep">-</span> <span class="tok-str">Copilot</span>
+<span class="tok-sep">---</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 -->
+  <section class="slide" id="slide-3">
+    <div class="slide-tag">04 — After the Event</div>
+    <h1 class="slide-title">Session ended.<br/><em>Data's yours.</em></h1>
+    <p class="slide-sub">The moment you close the session, a full results page is waiting. No extra steps. No data wrangling. Open it, export it, done.</p>
+
+    <div class="s1-grid">
+      <div class="card">
+        <div class="card-title">Results page — /admin/results/[id]</div>
+        <div class="context-item">
+          <div class="context-icon">🔒</div>
+          <div class="context-label">Admin-only — protected by <strong>ADMIN_CODE</strong></div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">📊</div>
+          <div class="context-label"><strong>Full breakdown per question</strong> — all visualizations, all questions, scrollable</div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">🔗</div>
+          <div class="context-label"><strong>One tap from the control panel</strong> — direct link after session ends</div>
+        </div>
+        <div class="context-item">
+          <div class="context-icon">📱</div>
+          <div class="context-label">Any device, any browser — just a URL</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Export options</div>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px;">
+
+          <div style="background:var(--green-dim);border:1px solid rgba(0,212,138,.2);border-radius:10px;padding:16px 18px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px;">📥 CSV — two files</div>
+            <div style="font-size:12.5px;color:var(--muted-hi);font-weight:300;line-height:1.55;">
+              <strong style="color:var(--text)">summary.csv</strong> — aggregated counts and percentages per question<br/>
+              <strong style="color:var(--text)">raw.csv</strong> — one row per vote, option labels resolved, ready for analysis
+            </div>
+            <div style="font-family:var(--font-m);font-size:10px;color:var(--green);margin-top:8px;">Generated client-side — no server round-trip</div>
+          </div>
+
+          <div style="background:var(--blue-dim);border:1px solid rgba(75,142,250,.2);border-radius:10px;padding:16px 18px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px;">🖨 PDF — print to file</div>
+            <div style="font-size:12.5px;color:var(--muted-hi);font-weight:300;line-height:1.55;">
+              Browser-native print dialog. Charts render clean. Word clouds fall back to a frequency table in print mode.
+            </div>
+            <div style="font-family:var(--font-m);font-size:10px;color:var(--blue);margin-top:8px;">Zero dependencies — window.print() with print CSS</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<nav class="nav">
+  <button class="nav-btn" id="prev" disabled>&#8592;</button>
+  <div class="nav-dots" id="dots"></div>
+  <button class="nav-btn" id="next">&#8594;</button>
+  <span class="slide-counter" id="counter">1 / 5</span>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const counter = document.getElementById('counter');
+  let cur = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => go(i);
+    dotsEl.appendChild(d);
+  });
+
+  function go(to) {
+    if (to < 0 || to >= slides.length || to === cur) return;
+    const dir = to > cur ? 1 : -1;
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('out-left');
+    setTimeout(() => slides[cur].classList.remove('out-left'), 350);
+    cur = to;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===cur));
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    counter.textContent = `${cur+1} / ${slides.length}`;
+  }
+
+  prevBtn.onclick = () => go(cur-1);
+  nextBtn.onclick = () => go(cur+1);
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key==='ArrowDown') go(cur+1);
+    if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   go(cur-1);
+  });
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx=e.touches[0].clientX, {passive:true});
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx)>50) go(dx<0 ? cur+1 : cur-1);
+  }, {passive:true});
+</script>
+</body>
+</html>
