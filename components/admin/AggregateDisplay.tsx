@@ -94,8 +94,8 @@ export default function AggregateDisplay({ sessionId, questionIndex, questionTyp
       <div className="w-full">
         <p className="text-sm text-gray-400 mb-3">{aggregate.totalVotes} {label}</p>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 40 }}>
-            <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 13 }} angle={-20} textAnchor="end" interval={0} />
+          <BarChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 70 }}>
+            <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 13 }} angle={-20} textAnchor="end" interval={0} height={80} />
             <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} allowDecimals={false} />
             <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
             <Bar dataKey="count" radius={[6, 6, 0, 0]}>

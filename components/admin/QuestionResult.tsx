@@ -33,12 +33,12 @@ export default function QuestionResult({ index, questionText, aggregate }: Props
           <p className="text-sm text-gray-400 mb-3 print:text-gray-500">
             {aggregate.totalVotes} {aggregate.type === "multiple_choice" ? "responses" : "votes"}
           </p>
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart
               data={aggregate.options.map((opt, i) => ({ name: opt, count: aggregate.counts[i] ?? 0 }))}
-              margin={{ left: 0, right: 0, top: 0, bottom: 40 }}
+              margin={{ left: 0, right: 0, top: 0, bottom: 70 }}
             >
-              <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 12 }} angle={-20} textAnchor="end" interval={0} />
+              <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 12 }} angle={-20} textAnchor="end" interval={0} height={80} />
               <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#1f2937", border: "none", borderRadius: 8 }} />
               <Bar dataKey="count" radius={[6, 6, 0, 0]}>
