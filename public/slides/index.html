@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>cmcc-poll — How We Built It</title>
+<title>cmcc-poll - How We Built It</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -228,7 +228,7 @@
 <body>
 <div class="deck">
 
-  <!-- SLIDE 0 — JOIN -->
+  <!-- SLIDE 0 - JOIN -->
   <section class="slide active" id="slide-0">
     <div style="
       position:absolute; inset:0;
@@ -253,7 +253,7 @@
           <img
             src="https://api.qrserver.com/v1/create-qr-code/?size=232x232&data=https%3A%2F%2Fcmcc-poll.vercel.app%2F&bgcolor=ffffff&color=000000&margin=0&qzone=1&format=svg"
             width="232" height="232"
-            alt="QR code — cmcc-poll.vercel.app"
+            alt="QR code - cmcc-poll.vercel.app"
             style="display:block; border-radius:4px;"
           />
         </div>
@@ -291,16 +291,16 @@
 
   <!-- SLIDE 1 (was SLIDE 1) -->
   <section class="slide" id="slide-1-approach">
-    <div class="slide-tag">01 — Approach</div>
+    <div class="slide-tag">01 - Approach</div>
     <h1 class="slide-title">Spec first.<br/><em>Code second.</em></h1>
-    <p class="slide-sub">We built a live polling tool for 200 concurrent users in 2 weeks, solo. No wasted sprints. No rework. Because we defined everything before touching the codebase.</p>
+    <p class="slide-sub">We built a live polling tool for around 200 concurrent users in 2 weeks, solo. No wasted sprints. No rework. We defined everything before touching the codebase.</p>
 
     <div class="s1-grid">
       <div class="card">
         <div class="card-title">The constraints</div>
         <div class="context-item">
           <div class="context-icon">🎯</div>
-          <div class="context-label"><strong>200 concurrent users</strong> in a single live session</div>
+          <div class="context-label"><strong>Around 200 concurrent users</strong> in a single live session</div>
         </div>
         <div class="context-item">
           <div class="context-icon">⏱</div>
@@ -312,20 +312,20 @@
         </div>
         <div class="context-item">
           <div class="context-icon">♻️</div>
-          <div class="context-label">Questions <strong>versioned in Git.</strong> Reusable across events.</div>
+          <div class="context-label">Code <strong>versioned in Git. Questions stored in a .md file</strong> Reusable across events.</div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">The 7-phase discovery process</div>
         <ul class="phase-list">
-          <li><span class="phase-num">01</span><div><strong>Discovery</strong> — context, constraints, target load</div></li>
-          <li><span class="phase-num">02</span><div><strong>MVP scope</strong> — what's in, what's out, and why</div></li>
-          <li><span class="phase-num">03</span><div><strong>Tech stack</strong> — every decision with a trade-off</div></li>
-          <li><span class="phase-num">04</span><div><strong>Data model</strong> — 3 entities, schema locked</div></li>
-          <li><span class="phase-num">05</span><div><strong>User flows</strong> — presenter and audience, end-to-end</div></li>
-          <li><span class="phase-num">06</span><div><strong>Technical risks</strong> — 5 identified, all mitigated</div></li>
-          <li><span class="phase-num">07</span><div><strong>CLAUDE.md</strong> — persistent spec fed into the coding agent</div></li>
+          <li><span class="phase-num">01</span><div><strong>Discovery</strong> - context, constraints, target load</div></li>
+          <li><span class="phase-num">02</span><div><strong>MVP scope</strong> - what's in, what's out, and why</div></li>
+          <li><span class="phase-num">03</span><div><strong>Tech stack</strong> - every decision with a trade-off</div></li>
+          <li><span class="phase-num">04</span><div><strong>Data model</strong> - 3 entities, schema locked</div></li>
+          <li><span class="phase-num">05</span><div><strong>User flows</strong> - presenter and audience, end-to-end</div></li>
+          <li><span class="phase-num">06</span><div><strong>Technical risks</strong> - 5 identified, all mitigated</div></li>
+          <li><span class="phase-num">07</span><div><strong>CLAUDE.md</strong> - persistent spec fed into the coding agent</div></li>
         </ul>
         <div class="claude-badge">
           📄 &nbsp;CLAUDE.md &rarr; permanent context loaded by Claude Code on every dev session
@@ -336,7 +336,7 @@
 
   <!-- SLIDE 2 -->
   <section class="slide" id="slide-1">
-    <div class="slide-tag">02 — Stack</div>
+    <div class="slide-tag">02 - Stack</div>
     <h1 class="slide-title">Free tier.<br/><em>No compromises.</em></h1>
     <p class="slide-sub">Two providers. Zero infrastructure to babysit on event day. If it doesn't run on a free plan, it didn't make the cut.</p>
 
@@ -344,7 +344,7 @@
       <div class="stack-card" style="--accent-color:#60A5FA;">
         <div class="stack-layer">Framework</div>
         <div class="stack-tool">Next.js 15</div>
-        <div class="stack-desc">App Router — frontend and API routes in one project. Auto-deploy from GitHub.</div>
+        <div class="stack-desc">App Router - frontend and API routes in one project. Auto-deploy from GitHub.</div>
         <div class="free-badge">✓ Vercel Hobby</div>
       </div>
       <div class="stack-card" style="--accent-color:#00D48A;">
@@ -374,7 +374,7 @@
       <div class="stack-card" style="--accent-color:#FB923C;">
         <div class="stack-layer">Load testing</div>
         <div class="stack-tool">k6</div>
-        <div class="stack-desc">200 virtual users, realistic voting behavior, ~6 min run. CLI or GitHub Actions — no infra needed.</div>
+        <div class="stack-desc">200 virtual users, realistic voting behavior, ~6 min run. CLI or GitHub Actions - no infra needed.</div>
         <div class="free-badge">✓ Open source</div>
       </div>
     </div>
@@ -382,14 +382,14 @@
     <div class="arch-note">
       <div class="arch-note-icon">⚡</div>
       <div class="arch-note-text">
-        <strong>Key call:</strong> only the projected laptop uses Supabase Realtime (1 connection, total). Audience and control panel use 2-second HTTP polling. Result: well under the free tier limit regardless of participant count.
+        <!-- <strong>Key call:</strong> only the projected laptop uses Supabase Realtime (1 connection, total). Audience and control panel use 2-second HTTP polling. Result: well under the free tier limit regardless of participant count. -->
       </div>
     </div>
   </section>
 
   <!-- SLIDE 3 -->
   <section class="slide" id="slide-2">
-    <div class="slide-tag">03 — What We Shipped</div>
+    <div class="slide-tag">03 - What We Shipped</div>
     <h1 class="slide-title">5 question types.<br/><em>One file.</em></h1>
     <p class="slide-sub">Every session is configured by a <code style="font-family:'IBM Plex Mono';font-size:15px;color:var(--green)">questions.md</code> in the repo. Edit it, commit it, run a new event. That's it.</p>
 
@@ -399,35 +399,35 @@
           <div class="qtype-icon" style="background:rgba(96,165,250,.12);">🔘</div>
           <div>
             <div class="qtype-name">Single Choice</div>
-            <div class="qtype-desc">Radio buttons — pick exactly one</div>
+            <div class="qtype-desc">Radio buttons - pick exactly one</div>
           </div>
         </div>
         <div class="qtype">
           <div class="qtype-icon" style="background:rgba(167,139,250,.12);">☑️</div>
           <div>
             <div class="qtype-name">Multiple Choice</div>
-            <div class="qtype-desc">Checkboxes — select all that apply</div>
+            <div class="qtype-desc">Checkboxes - select all that apply</div>
           </div>
         </div>
         <div class="qtype">
           <div class="qtype-icon" style="background:rgba(0,212,138,.12);">☁️</div>
           <div>
             <div class="qtype-name">Word Cloud</div>
-            <div class="qtype-desc">Free text — word size scales with frequency</div>
+            <div class="qtype-desc">Free text - word size scales with frequency</div>
           </div>
         </div>
         <div class="qtype">
           <div class="qtype-icon" style="background:rgba(251,146,60,.12);">💬</div>
           <div>
             <div class="qtype-name">Open-Ended</div>
-            <div class="qtype-desc">Free text — answers stream in live as cards</div>
+            <div class="qtype-desc">Free text - answers stream in live as cards</div>
           </div>
         </div>
         <div class="qtype">
           <div class="qtype-icon" style="background:rgba(251,191,36,.12);">📊</div>
           <div>
             <div class="qtype-name">Scale</div>
-            <div class="qtype-desc">Parametric slider — custom min/max, mean + distribution</div>
+            <div class="qtype-desc">Parametric slider - custom min/max, mean + distribution</div>
           </div>
         </div>
       </div>
@@ -482,28 +482,28 @@
 
   <!-- SLIDE 4 -->
   <section class="slide" id="slide-3">
-    <div class="slide-tag">04 — After the Event</div>
+    <div class="slide-tag">04 - After the Event</div>
     <h1 class="slide-title">Session ended.<br/><em>Data's yours.</em></h1>
     <p class="slide-sub">The moment you close the session, a full results page is waiting. No extra steps. No data wrangling. Open it, export it, done.</p>
 
     <div class="s1-grid">
       <div class="card">
-        <div class="card-title">Results page — /admin/results/[id]</div>
+        <div class="card-title">Results page - /admin/results/[id]</div>
         <div class="context-item">
           <div class="context-icon">🔒</div>
-          <div class="context-label">Admin-only — protected by <strong>ADMIN_CODE</strong></div>
+          <div class="context-label">Admin-only - protected by <strong>ADMIN_CODE</strong></div>
         </div>
         <div class="context-item">
           <div class="context-icon">📊</div>
-          <div class="context-label"><strong>Full breakdown per question</strong> — all visualizations, all questions, scrollable</div>
+          <div class="context-label"><strong>Full breakdown per question</strong> - all visualizations, all questions, scrollable</div>
         </div>
         <div class="context-item">
           <div class="context-icon">🔗</div>
-          <div class="context-label"><strong>One tap from the control panel</strong> — direct link after session ends</div>
+          <div class="context-label"><strong>One tap from the control panel</strong> - direct link after session ends</div>
         </div>
         <div class="context-item">
           <div class="context-icon">📱</div>
-          <div class="context-label">Any device, any browser — just a URL</div>
+          <div class="context-label">Any device, any browser - just a URL</div>
         </div>
       </div>
 
@@ -512,20 +512,20 @@
         <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px;">
 
           <div style="background:var(--green-dim);border:1px solid rgba(0,212,138,.2);border-radius:10px;padding:16px 18px;">
-            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px;">📥 CSV — two files</div>
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px;">📥 CSV - two files</div>
             <div style="font-size:12.5px;color:var(--muted-hi);font-weight:300;line-height:1.55;">
-              <strong style="color:var(--text)">summary.csv</strong> — aggregated counts and percentages per question<br/>
-              <strong style="color:var(--text)">raw.csv</strong> — one row per vote, option labels resolved, ready for analysis
+              <strong style="color:var(--text)">session-[session_id]-result.csv</strong> - aggregated counts and percentages per question<br/>
+              - one row per vote, option labels resolved, ready for analysis
             </div>
-            <div style="font-family:var(--font-m);font-size:10px;color:var(--green);margin-top:8px;">Generated client-side — no server round-trip</div>
+            <div style="font-family:var(--font-m);font-size:10px;color:var(--green);margin-top:8px;">Generated client-side - no server round-trip</div>
           </div>
 
           <div style="background:var(--blue-dim);border:1px solid rgba(75,142,250,.2);border-radius:10px;padding:16px 18px;">
-            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px;">🖨 PDF — print to file</div>
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px;">🖨 PDF - print to file</div>
             <div style="font-size:12.5px;color:var(--muted-hi);font-weight:300;line-height:1.55;">
               Browser-native print dialog. Charts render clean. Word clouds fall back to a frequency table in print mode.
             </div>
-            <div style="font-family:var(--font-m);font-size:10px;color:var(--blue);margin-top:8px;">Zero dependencies — window.print() with print CSS</div>
+            <div style="font-family:var(--font-m);font-size:10px;color:var(--blue);margin-top:8px;">Zero dependencies - window.print() with print CSS</div>
           </div>
 
         </div>
