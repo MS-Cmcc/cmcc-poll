@@ -9,7 +9,10 @@
       "Bash(rm -rf app/globals.css app/page.tsx app/layout.tsx public/next.svg public/vercel.svg AGENTS.md README.md)",
       "Bash(mkdir -p app/admin/control app/admin/display \"app/s/[code]\" app/api/admin/sessions app/api/admin/verify app/api/sessions/by-code/\"[code]\" \"app/api/sessions/[id]/state\" \"app/api/sessions/[id]/votes\" \"app/api/sessions/[id]/participants\" app/api/health lib/db lib/md lib/realtime components/admin components/audience components/shared supabase/migrations)",
       "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm install --save-dev tsx)",
-      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm run build)"
+      "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm run build)",
+      "Bash(mkdir -p /Users/mscuro/Documents/github/cmcc-poll/public/slides)",
+      "Bash(mv /Users/mscuro/Documents/github/cmcc-poll/slides/index.html /Users/mscuro/Documents/github/cmcc-poll/public/slides/index.html)",
+      "Bash(rmdir /Users/mscuro/Documents/github/cmcc-poll/slides)"
     ],
     "additionalDirectories": [
       "/Users/mscuro/Documents/github/cmcc-poll/app",
