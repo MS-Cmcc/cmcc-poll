@@ -12,7 +12,8 @@
       "Bash(PATH=__TRACKED_VAR__/.nvm/versions/node/v22.13.1/bin:__TRACKED_VAR__ npm run build)",
       "Bash(mkdir -p /Users/mscuro/Documents/github/cmcc-poll/public/slides)",
       "Bash(mv /Users/mscuro/Documents/github/cmcc-poll/slides/index.html /Users/mscuro/Documents/github/cmcc-poll/public/slides/index.html)",
-      "Bash(rmdir /Users/mscuro/Documents/github/cmcc-poll/slides)"
+      "Bash(rmdir /Users/mscuro/Documents/github/cmcc-poll/slides)",
+      "Bash(command -v nvm)"
     ],
     "additionalDirectories": [
       "/Users/mscuro/Documents/github/cmcc-poll/app",

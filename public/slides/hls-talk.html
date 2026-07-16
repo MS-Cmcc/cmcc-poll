@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hidden Layer Society — AI-informed software development</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080D18;
+    --bg-2:      #0E1629;
+    --bg-card:   rgba(255,255,255,0.038);
+    --border:    rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.14);
+    --green:     #00D48A;
+    --green-dim: rgba(0,212,138,0.12);
+    --blue:      #4B8EFA;
+    --blue-dim:  rgba(75,142,250,0.12);
+    --text:      #EEF2FF;
+    --muted:     #6B7FA3;
+    --muted-hi:  #94A3B8;
+    --font-h:    'Syne', sans-serif;
+    --font-b:    'DM Sans', sans-serif;
+    --font-m:    'IBM Plex Mono', monospace;
+  }
+
+  html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text);
+    font-family: var(--font-b); overflow: hidden; user-select: none; }
+
+  .deck { position: relative; width: 100%; height: 100%; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 56px 76px 52px;
+    opacity: 0; pointer-events: none;
+    transform: translateX(40px);
+    transition: opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1);
+  }
+  .slide.active  { opacity: 1; pointer-events: all; transform: translateX(0); }
+  .slide.out-left { opacity: 0; transform: translateX(-40px); transition: opacity .3s ease, transform .3s ease; }
+
+  .slide::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.016) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.016) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(14,22,41,.9); border: 1px solid var(--border-hi);
+    border-radius: 40px; padding: 10px 20px; backdrop-filter: blur(14px); z-index: 100;
+  }
+  .nav-btn { width: 34px; height: 34px; border: 1px solid var(--border-hi); border-radius: 50%;
+    background: var(--bg-card); color: var(--muted-hi); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s, border-color .2s; font-size: 14px; }
+  .nav-btn:hover { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+  .nav-btn:disabled { opacity: .3; cursor: default; }
+  .nav-dots { display: flex; gap: 8px; align-items: center; padding: 0 6px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-hi);
+    cursor: pointer; transition: background .25s, transform .25s; }
+  .dot.active { background: var(--green); transform: scale(1.4); }
+  .slide-counter { font-family: var(--font-m); font-size: 11px; color: var(--muted);
+    padding-left: 4px; min-width: 44px; text-align: right; }
+
+  /* ─── COVER ─── */
+  .cover { justify-content: center; }
+  .cover-society {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-m); font-size: 13px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 40px;
+  }
+  .cover-society::before { content:''; width: 32px; height: 1px; background: var(--green); display: block; }
+
+  .cover-nodes { display: flex; align-items: center; gap: 5px; margin-left: 6px; }
+  .cover-nodes span { width: 5px; height: 5px; border-radius: 50%; background: var(--green); opacity: .5; }
+  .cover-nodes span:nth-child(2) { opacity: .8; }
+  .cover-nodes span:nth-child(3) { opacity: 1; }
+
+  .cover-title {
+    font-family: var(--font-h); font-weight: 800;
+    font-size: 68px; line-height: 1.04; letter-spacing: -.03em;
+    color: var(--text); margin-bottom: 8px; max-width: 900px;
+  }
+  .cover-title em { color: var(--green); font-style: normal; }
+
+  .cover-sub {
+    font-size: 18px; color: var(--muted-hi); font-weight: 300;
+    margin-bottom: 56px; letter-spacing: .01em;
+  }
+
+  .cover-meta { display: flex; align-items: center; gap: 20px; }
+  .cover-presenter {
+    font-family: var(--font-h); font-size: 22px; font-weight: 600; color: var(--text);
+  }
+  .cover-divider { width: 1px; height: 20px; background: var(--border-hi); }
+  .cover-place {
+    font-family: var(--font-m); font-size: 14px; color: var(--muted); letter-spacing: .02em;
+  }
+
+  /* ─── FOSBURY VIDEO ─── */
+  .fosbury { padding: 0; justify-content: center; align-items: center; }
+  .fos-stage { position: relative; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center; overflow: hidden; z-index:-1}
+  .fos-video {
+    max-width: 100%; max-height: 100%;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .fos-video.playing { opacity: 1; }
+
+  .fos-intro {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg); cursor: pointer;
+    transition: opacity .5s ease;
+  }
+  .fos-intro.hidden { opacity: 0; pointer-events: none; }
+  .fos-intro-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 28px;
+  }
+  .fos-intro-text {
+    font-family: var(--font-h); font-size: 56px; font-weight: 800;
+    letter-spacing: -.02em; color: var(--text); text-align: center; line-height: 1.1;
+    max-width: 800px;
+  }
+  .fos-intro-text em { color: var(--green); font-style: normal; }
+  .fos-intro-hint {
+    margin-top: 36px; font-family: var(--font-m); font-size: 13px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fos-play-icon {
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--muted);
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
+  }
+
+  /* ─── CODOGRAPHER ─── */
+  .codo { justify-content: center; }
+  .codo-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--blue); margin-bottom: 32px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .codo-tag::before { content:''; width: 28px; height: 1px; background: var(--blue); display: block; }
+  .codo-name {
+    font-family: var(--font-h); font-size: 72px; font-weight: 800;
+    letter-spacing: -.03em; color: var(--text); margin-bottom: 24px;
+  }
+  .codo-desc {
+    font-size: 17px; color: var(--muted-hi); font-weight: 300; line-height: 1.55;
+    max-width: 620px; margin-bottom: 48px;
+  }
+  .codo-checks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 52px; }
+  .codo-check { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .codo-check .q { color: var(--muted-hi); font-weight: 300; min-width: 240px; }
+  .codo-check .a { font-family: var(--font-m); font-size: 13px; font-weight: 500; }
+  .codo-check .a.no { color: #F97316; }
+  .codo-check .a.yes { color: var(--green); }
+
+  .codo-question {
+    border-top: 1px solid var(--border-hi); padding-top: 32px;
+    font-family: var(--font-h); font-size: 32px; font-weight: 700; color: var(--text);
+  }
+  .codo-question em { color: var(--blue); font-style: normal; }
+
+  /* ─── PRINCIPLES ─── */
+  .prin { justify-content: center; }
+  .prin-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 28px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .prin-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .prin-title {
+    font-family: var(--font-h); font-size: 44px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--text); line-height: 1.1; margin-bottom: 12px; max-width: 760px;
+  }
+  .prin-title em { color: var(--green); font-style: normal; }
+  .prin-sub { font-size: 16px; color: var(--muted-hi); font-weight: 300; margin-bottom: 44px; max-width: 620px; line-height: 1.5; }
+
+  .prin-phases { display: flex; gap: 14px; margin-bottom: 48px; flex-wrap: wrap; }
+  .prin-phase {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 20px;
+  }
+  .prin-phase-num { font-family: var(--font-m); font-size: 11px; color: var(--green); }
+  .prin-phase-name { font-family: var(--font-h); font-size: 15px; font-weight: 600; color: var(--text); }
+  .prin-phase.dim { opacity: .4; }
+  .prin-phase.dim .prin-phase-num { color: var(--muted); }
+  .prin-phase.dim .prin-phase-name { color: var(--muted-hi); }
+
+  .prin-outcomes { display: flex; gap: 40px; border-top: 1px solid var(--border-hi); padding-top: 36px; }
+  .prin-outcome { font-family: var(--font-h); font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+  .prin-outcome:nth-child(1) { color: var(--green); }
+  .prin-outcome:nth-child(2) { color: var(--blue); }
+  .prin-outcome:nth-child(3) { color: #A78BFA; }
+
+  /* ─── MENTIMETER / NEED ─── */
+  .menti { justify-content: center; }
+  .menti-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .menti-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .menti-title {
+    font-family: var(--font-h); font-size: 42px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--text); line-height: 1.1; margin-bottom: 16px;
+  }
+  .menti-title em { color: var(--green); font-style: normal; }
+  .menti-body { display: flex; gap: 44px; align-items: center; }
+  .menti-text { flex: 1; }
+  .menti-desc { font-size: 16px; color: var(--muted-hi); font-weight: 300; line-height: 1.6; margin-bottom: 20px; }
+  .menti-desc strong { color: var(--text); font-weight: 500; }
+  .menti-why {
+    border-left: 2px solid var(--green); padding-left: 16px;
+    font-size: 15px; color: var(--muted-hi); font-weight: 300; line-height: 1.5; font-style: italic;
+  }
+  .menti-img {
+    width: 460px; flex-shrink: 0; aspect-ratio: 16/9;
+    background: var(--bg-card); border: 1px dashed var(--border-hi); border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--muted);
+  }
+  .menti-img span.ph-icon { font-size: 26px; }
+  .menti-img span.ph-label { font-family: var(--font-m); font-size: 11px; letter-spacing: .05em; }
+
+  /* ─── PROCESS OVERVIEW ─── */
+  .proc { justify-content: center; }
+  .proc-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .proc-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .proc-title {
+    font-family: var(--font-h); font-size: 40px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .proc-title em { color: var(--green); font-style: normal; }
+  .proc-sub { font-size: 15px; color: var(--muted-hi); font-weight: 300; margin-bottom: 40px; }
+  .proc-steps { display: flex; flex-direction: column; gap: 0; }
+  .proc-step {
+    display: flex; align-items: center; gap: 20px;
+    padding: 13px 0; border-bottom: 1px solid var(--border);
+  }
+  .proc-step:last-child { border-bottom: none; }
+  .proc-step-num {
+    font-family: var(--font-m); font-size: 12px; color: var(--green);
+    background: var(--green-dim); border-radius: 6px; padding: 4px 9px; flex-shrink: 0;
+  }
+  .proc-step-name { font-family: var(--font-h); font-size: 18px; font-weight: 600; color: var(--text); min-width: 220px; }
+  .proc-step-desc { font-size: 14px; color: var(--muted); font-weight: 300; }
+  .proc-step.final .proc-step-num { color: var(--bg); background: var(--green); }
+  .proc-step.final .proc-step-name { color: var(--green); }
+
+  /* ─── REQUIREMENTS ─── */
+  .req { justify-content: center; }
+  .req-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .req-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .req-title { font-family: var(--font-h); font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--text); margin-bottom: 28px; }
+  .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .req-block { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; background: var(--bg-card); }
+  .req-block.span2 { grid-column: 1 / -1; }
+  .req-bhead { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--acc); }
+  .req-blabel { font-family: var(--font-h); font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text); }
+  .req-bsub { font-size: 11px; color: var(--muted); }
+  .req-bcount { margin-left: auto; font-family: var(--font-m); font-size: 11px; color: var(--acc); }
+  .req-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .req-chip {
+    font-size: 12px; color: var(--muted-hi); font-weight: 300;
+    background: rgba(255,255,255,.03); border: 1px solid var(--border);
+    border-left: 2px solid var(--acc); border-radius: 6px; padding: 5px 10px;
+  }
+  .req-func  { --acc: var(--green); }
+  .req-nfunc { --acc: var(--blue); }
+  .req-tech  { --acc: #F59E0B; }
+
+  /* ─── CLAUDE.MD ─── */
+  .cmd { justify-content: center; }
+  .cmd-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cmd-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .cmd-title { font-family: var(--font-h); font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--text); margin-bottom: 6px; }
+  .cmd-title em { color: var(--green); font-style: normal; }
+  .cmd-sub { font-size: 15px; color: var(--muted-hi); font-weight: 300; margin-bottom: 24px; }
+  .cmd-body { display: flex; gap: 24px; align-items: stretch; height: 62vh; }
+  .cmd-panel {
+    flex: 1; background: #030711; border: 1px solid var(--border-hi); border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .cmd-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.025); flex-shrink: 0; }
+  .cmd-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .cmd-dot.r{background:#FF5F57;} .cmd-dot.y{background:#FEBC2E;} .cmd-dot.g{background:#28C840;}
+  .cmd-fname { font-family: var(--font-m); font-size: 11px; color: var(--muted); margin-left: 8px; }
+  .cmd-scroll { padding: 18px 22px; font-family: var(--font-m); font-size: 11px; line-height: 1.7; overflow-y: auto; flex: 1; min-height: 0; }
+  .cmd-scroll::-webkit-scrollbar { width: 8px; }
+  .cmd-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+  .cmd-scroll pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .cmd-h1 { color: var(--green); font-weight: 500; }
+  .cmd-h2 { color: var(--blue); font-weight: 500; }
+  .cmd-c { color: #475569; }
+  .cmd-t { color: var(--muted-hi); }
+  .cmd-b { color: var(--text); font-weight: 500; }
+  .cmd-side { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+  .cmd-point-t { font-family: var(--font-h); font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .cmd-point-d { font-size: 13px; color: var(--muted-hi); font-weight: 300; line-height: 1.45; }
+
+  /* ─── FLOWCHART ─── */
+  .flow { justify-content: flex-start; padding-bottom: 70px; }
+  .flow-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .flow-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .flow-title { font-family: var(--font-h); font-size: 28px; font-weight: 800; letter-spacing: -.02em; color: var(--text); margin-bottom: 14px; flex-shrink: 0; }
+  .flow-title em { color: var(--green); font-style: normal; }
+  .flow-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; width: 100%; }
+  .flow-stage svg { max-height: 100%; max-width: 100%; height: 100%; width: auto; display: block; }
+  .fl-fill-gray  { fill: rgba(255,255,255,.05); stroke: var(--border-hi); }
+  .fl-fill-green { fill: rgba(0,212,138,.12); stroke: rgba(0,212,138,.4); }
+  .fl-fill-blue  { fill: rgba(75,142,250,.12); stroke: rgba(75,142,250,.4); }
+  .fl-fill-teal  { fill: rgba(29,158,117,.14); stroke: rgba(29,158,117,.45); }
+  .fl-fill-purple{ fill: rgba(167,139,250,.14); stroke: rgba(167,139,250,.45); }
+  .fl-fill-amber { fill: rgba(245,158,11,.14); stroke: rgba(245,158,11,.45); }
+  .fl-th { fill: var(--text); font-family: var(--font-h); font-size: 14px; font-weight: 600; }
+  .fl-ts { fill: var(--muted-hi); font-family: var(--font-b); font-size: 12px; font-weight: 300; }
+  .fl-arr { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+
+  /* ─── CLOSING ─── */
+  .close { justify-content: center; align-items: flex-start; }
+  .close-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 40px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .close-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .close-line {
+    font-family: var(--font-h); font-size: 40px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--muted-hi); line-height: 1.2; margin-bottom: 20px; max-width: 900px;
+  }
+  .close-hero {
+    font-family: var(--font-h); font-size: 46px; font-weight: 800; letter-spacing: -.02em;
+    color: var(--text); line-height: 1.2; margin-bottom: 48px; max-width: 920px;
+  }
+  .close-hero em { color: var(--green); font-style: normal; }
+  .close-final {
+    border-top: 1px solid var(--border-hi); padding-top: 32px;
+    font-size: 20px; color: var(--muted-hi); font-weight: 300; line-height: 1.5; max-width: 720px;
+  }
+  .close-final strong { color: var(--text); font-weight: 500; }
+
+  /* ─── THANKS ─── */
+  .thanks { padding: 0; }
+  .thanks-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .28;
+  }
+  .thanks-placeholder {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; color: var(--muted);
+    background: var(--bg-2); border: 1px dashed var(--border-hi);
+  }
+  .thanks-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to right, rgba(8,13,24,.92) 0%, rgba(8,13,24,.75) 45%, rgba(8,13,24,.35) 100%);
+  }
+  .thanks-content {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 56px 76px;
+  }
+  .thanks-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .thanks-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .thanks-title {
+    font-family: var(--font-h); font-size: 80px; font-weight: 800; letter-spacing: -.03em;
+    color: var(--text); line-height: 1; margin-bottom: 20px;
+  }
+  .thanks-title em { color: var(--green); font-style: normal; }
+  .thanks-q { font-size: 22px; color: var(--muted-hi); font-weight: 300; margin-bottom: 40px; }
+  .thanks-meta { display: flex; align-items: center; gap: 18px; }
+  .thanks-name { font-family: var(--font-h); font-size: 20px; font-weight: 600; color: var(--text); }
+  .thanks-div { width: 1px; height: 18px; background: var(--border-hi); }
+  .thanks-handle { font-family: var(--font-m); font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- SLIDE 1 — COVER -->
+  <section class="slide cover active" id="slide-0">
+    <div class="cover-society">
+      Hidden Layer Society meeting
+      <span class="cover-nodes"><span></span><span></span><span></span></span>
+    </div>
+
+    <h1 class="cover-title">AI-informed<br/><em>software development</em></h1>
+    <p class="cover-sub">Building software the way we always knew we should — now that we finally can.</p>
+
+    <div class="cover-meta">
+      <span class="cover-presenter">Matteo Scuro</span>
+      <span class="cover-divider"></span>
+      <span class="cover-place">Lecce · Thursday, July 16, 2026</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 — FOSBURY -->
+  <section class="slide fosbury" id="slide-1">
+    <div class="fos-stage">
+      <video class="fos-video" id="fosVideo" preload="auto" playsinline
+        src="How-One-Man-Changed-the-High-Jump-Forever.mp4"></video>
+      <div class="fos-controls" id="fosControls" style="position:sticky; bottom:28px; left:50%; transform:translateX(-50%); z-index:8; display:none; align-items:center; gap:10px; background:rgba(14,22,41,.9); border:1px solid var(--border-hi); border-radius:40px; padding:8px 14px; backdrop-filter:blur(12px);">
+        <button id="fosPlayPause" aria-label="Play/pause" style="width:34px; height:34px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;">&#10074;&#10074;</button>
+        <button id="fosMute" aria-label="Mute/unmute" style="width:34px; height:34px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;">&#128266;</button>
+      </div>
+      <div class="fos-intro" id="fosIntro">
+        <div class="fos-intro-tag">Let's start here</div>
+        <div class="fos-intro-text">This presentation is<br/>about <em>high jump</em>.</div>
+        <div class="fos-intro-hint">
+          <span class="fos-play-icon">&#9654;</span> click to play
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — CODOGRAPHER -->
+  <section class="slide codo" id="slide-2">
+    <div style="display:flex; gap:56px; align-items:center; width:100%;">
+      <div style="flex:1;">
+        <div class="codo-tag">Let me introduce someone</div>
+        <h1 class="codo-name">The Codographer</h1>
+        <div style="font-family:var(--font-m); font-size:13px; color:var(--muted); margin-top:-16px; margin-bottom:24px;">
+          coder &times; oceanographer
+        </div>
+        <p class="codo-desc">A researcher. No software engineering background. But a Claude license and a problem to solve &mdash; and working code by the afternoon.</p>
+
+        <div class="codo-checks">
+          <div class="codo-check"><span class="q">Is he a good developer?</span><span class="a no">No</span></div>
+          <div class="codo-check"><span class="q">Does his code have tests?</span><span class="a no">Probably not</span></div>
+          <div class="codo-check"><span class="q">Is it documented?</span><span class="a no">Not really</span></div>
+          <div class="codo-check"><span class="q">Does it work?</span><span class="a yes">Yes</span></div>
+        </div>
+
+        <div class="codo-question">Is the Codographer <em>our competitor?</em></div>
+      </div>
+
+      <!-- <div style="width:280px; flex-shrink:0; aspect-ratio:9/16; background:var(--bg-card); border:1px dashed var(--border-hi); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted);">
+        <span style="font-size:24px;">&#128444;</span>
+        <span style="font-family:var(--font-m); font-size:11px; letter-spacing:.05em;">image 9:16</span>
+      </div> -->
+      <div style="width:280px; flex-shrink:0; aspect-ratio:9/16; border-radius:14px; overflow:hidden;">
+        <img src="doc.jpg" alt="The Codographer" style="width:100%; height:100%; object-fit:cover;"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — PRINCIPLES -->
+  <section class="slide prin" id="slide-3">
+    <div class="prin-tag">The difference</div>
+    <h1 class="prin-title">He uses AI to <em>generate code</em>.<br/>We can use it to apply <em>engineering</em>.</h1>
+    <p class="prin-sub">The same principles we already know &mdash; now affordable even on a two-week solo project.</p>
+
+    <div class="prin-phases">
+      <div class="prin-phase"><span class="prin-phase-num">01</span><span class="prin-phase-name">Requirements</span></div>
+      <div class="prin-phase"><span class="prin-phase-num">02</span><span class="prin-phase-name">Architecture</span></div>
+      <div class="prin-phase dim"><span class="prin-phase-num">03</span><span class="prin-phase-name">Development</span></div>
+      <div class="prin-phase"><span class="prin-phase-num">04</span><span class="prin-phase-name">Testing</span></div>
+      <div class="prin-phase"><span class="prin-phase-num">05</span><span class="prin-phase-name">Documentation</span></div>
+    </div>
+
+    <div class="prin-outcomes">
+      <span class="prin-outcome">Reusability.</span>
+      <span class="prin-outcome">Maintainability.</span>
+      <span class="prin-outcome">Reliability.</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — MENTIMETER + NEED -->
+  <section class="slide menti" id="slide-4">
+    <div class="menti-tag">The case study</div>
+    <h1 class="menti-title">I could have <em>bought a license</em>.<br/>I built it instead.</h1>
+    <div class="menti-body" style="margin-top:12px;">
+      <div class="menti-text">
+        <p class="menti-why" style="font-size:17px;">The perfect excuse to test one idea: real engineering, on a small, solo, two-week project.</p>
+      </div>
+      <div class="menti-img" id="mentiStage" style="position:relative; overflow:hidden; cursor:pointer;">
+        <video id="mentiVideo" preload="auto" playsinline
+          src="Say_Hello_to_Mentimeter.mp4"
+          style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .5s ease;"></video>
+        <div id="mentiIntro" style="position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:10px; transition:opacity .4s ease;">
+          <span class="ph-icon" style="font-size:22px; color:var(--green);">&#9654;</span>
+          <span class="ph-label">Say hello to Mentimeter</span>
+        </div>
+        <div class="menti-controls" id="mentiControls" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:5; display:none; align-items:center; gap:8px; background:rgba(14,22,41,.9); border:1px solid var(--border-hi); border-radius:40px; padding:6px 10px; backdrop-filter:blur(12px);">
+          <button id="mentiPlayPause" aria-label="Play/pause" style="width:28px; height:28px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px;">&#10074;&#10074;</button>
+          <button id="mentiMute" aria-label="Mute/unmute" style="width:28px; height:28px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;">&#128266;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — QR JOIN -->
+  <section class="slide" id="slide-5">
+    <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px;">
+      <div style="position:relative; margin-bottom:40px;">
+        <div style="position:absolute; inset:-20px; border-radius:50%; background:radial-gradient(circle, rgba(0,212,138,.18) 0%, transparent 70%); animation:pulse 3s ease-in-out infinite;"></div>
+        <div style="width:260px; height:260px; border-radius:20px; background:#fff; padding:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 60px rgba(0,212,138,.25), 0 0 0 1px rgba(0,212,138,.3); position:relative; z-index:1;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=232x232&data=https%3A%2F%2Fcmcc-poll.vercel.app%2F&bgcolor=ffffff&color=000000&margin=0&qzone=1&format=svg"
+            width="232" height="232" alt="QR code to join the poll" style="display:block; border-radius:4px;"/>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-m); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--green); margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span style="display:block; width:28px; height:1px; background:var(--green)"></span>
+          Scan to join the poll
+          <span style="display:block; width:28px; height:1px; background:var(--green)"></span>
+        </div>
+        <div style="font-family:var(--font-h); font-size:48px; font-weight:800; color:var(--text); letter-spacing:-.02em; margin-bottom:8px;">cmcc-poll.vercel.app</div>
+        <div style="font-family:var(--font-m); font-size:14px; color:var(--muted);">or type the URL in your browser</div>
+      </div>
+    </div>
+    <style>
+      @keyframes pulse { 0%,100%{transform:scale(1); opacity:.7;} 50%{transform:scale(1.08); opacity:1;} }
+    </style>
+  </section>
+
+  <!-- SLIDE 7 — PROCESS OVERVIEW -->
+  <section class="slide proc" id="slide-6">
+    <div class="proc-tag">How we built it</div>
+    <h1 class="proc-title">Seven phases, <em>before any code</em></h1>
+    <p class="proc-sub">Not to generate code &mdash; to think. Everything landed in one document.</p>
+
+    <div class="proc-steps">
+      <div class="proc-step"><span class="proc-step-num">01</span><span class="proc-step-name">Discovery</span><span class="proc-step-desc">Context, constraints, target load</span></div>
+      <div class="proc-step"><span class="proc-step-num">02</span><span class="proc-step-name">MVP scope</span><span class="proc-step-desc">What's in, what's out, and why</span></div>
+      <div class="proc-step"><span class="proc-step-num">03</span><span class="proc-step-name">Tech stack</span><span class="proc-step-desc">Every decision with a trade-off</span></div>
+      <div class="proc-step"><span class="proc-step-num">04</span><span class="proc-step-name">Data model</span><span class="proc-step-desc">Three entities, schema locked</span></div>
+      <div class="proc-step"><span class="proc-step-num">05</span><span class="proc-step-name">User flows</span><span class="proc-step-desc">Presenter and audience, end-to-end</span></div>
+      <div class="proc-step"><span class="proc-step-num">06</span><span class="proc-step-name">Technical risks</span><span class="proc-step-desc">Five identified, all mitigated</span></div>
+      <div class="proc-step final"><span class="proc-step-num">07</span><span class="proc-step-name">CLAUDE.md</span><span class="proc-step-desc">Persistent spec &mdash; the foundation for every coding session</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8 — REQUIREMENTS -->
+  <section class="slide req" id="slide-7">
+    <div class="req-tag">Artifact 1 &mdash; requirements</div>
+    <h1 class="req-title">Defined upfront, by category</h1>
+
+    <div class="req-grid">
+      <div class="req-block req-func">
+        <div class="req-bhead"><span class="req-blabel">Functional</span><span class="req-bsub">&mdash; Admin</span><span class="req-bcount">8</span></div>
+        <div class="req-chips">
+          <span class="req-chip">Authenticate</span>
+          <span class="req-chip">Create &amp; start session</span>
+          <span class="req-chip">Navigate questions</span>
+          <span class="req-chip">End session</span>
+          <span class="req-chip">View results</span>
+          <span class="req-chip">Export CSV</span>
+          <span class="req-chip">Export PDF</span>
+          <span class="req-chip">Read-only display</span>
+        </div>
+      </div>
+      <div class="req-block req-func">
+        <div class="req-bhead"><span class="req-blabel">Functional</span><span class="req-bsub">&mdash; Audience</span><span class="req-bcount">4</span></div>
+        <div class="req-chips">
+          <span class="req-chip">Join via 6-digit code</span>
+          <span class="req-chip">Answer 5 question types</span>
+          <span class="req-chip">Vote confirmation</span>
+          <span class="req-chip">Near-real-time sync</span>
+        </div>
+      </div>
+      <div class="req-block req-nfunc span2">
+        <div class="req-bhead"><span class="req-blabel">Non-functional</span><span class="req-bsub">&mdash; qualities &amp; constraints</span><span class="req-bcount">7</span></div>
+        <div class="req-chips">
+          <span class="req-chip">200 concurrent users</span>
+          <span class="req-chip">Zero budget &mdash; free tier</span>
+          <span class="req-chip">2-week delivery</span>
+          <span class="req-chip">Mobile-first audience</span>
+          <span class="req-chip">Participant anonymity</span>
+          <span class="req-chip">Near-real-time updates</span>
+          <span class="req-chip">Vote integrity</span>
+        </div>
+      </div>
+      <div class="req-block req-tech span2">
+        <div class="req-bhead"><span class="req-blabel">Technical</span><span class="req-bsub">&mdash; binding decisions</span><span class="req-bcount">5</span></div>
+        <div class="req-chips">
+          <span class="req-chip">Markdown authoring</span>
+          <span class="req-chip">Next.js + Supabase + Vercel</span>
+          <span class="req-chip">Auth via env var</span>
+          <span class="req-chip">Zod validation</span>
+          <span class="req-chip">Deploy from GitHub</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9 — CLAUDE.MD -->
+  <section class="slide cmd" id="slide-8">
+    <div class="cmd-tag">Artifact 2 &mdash; the bridge</div>
+    <h1 class="cmd-title">One document. <em>Permanent context.</em></h1>
+    <p class="cmd-sub">The first thing the coding assistant reads, every session. This is the real file.</p>
+
+    <div class="cmd-body">
+      <div class="cmd-panel">
+        <div class="cmd-bar"><span class="cmd-dot r"></span><span class="cmd-dot y"></span><span class="cmd-dot g"></span><span class="cmd-fname">CLAUDE.md</span></div>
+        <div class="cmd-scroll"><pre><span class="cmd-t">@AGENTS.md</span>
+<span class="cmd-h1"># Mentimeter Clone — MVP</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Project Overview</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">A self-hosted Mentimeter-like tool for running live audience interaction during a single presenter&#x27;s session. The presenter authors questions in a markdown file committed to the repo; participants join via a 6-digit code on their phone and respond in real time; the presenter controls the flow from a smartphone while a laptop projects live aggregated results on the big screen.</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Context:**</span>
+<span class="cmd-t">- Solo developer building this as a personal tool for an upcoming live event</span>
+<span class="cmd-t">- Single presenter (the developer himself) — no multi-tenant, no presenter accounts in MVP</span>
+<span class="cmd-t">- Target: 200 concurrent participants in a single session</span>
+<span class="cmd-t">- Deploy budget: free tier only</span>
+<span class="cmd-t">- Timeline: 2 weeks to a stable, working MVP</span>
+<span class="cmd-t">- UI language: English</span>
+<span class="cmd-t">- Event context: CMCC (Centro Mediterraneo per i Cambiamenti Climatici) poll on AI tools in research</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Architectural philosophy:** ruthlessly minimal. Every feature that doesn&#x27;t materially improve the live event experience is out of scope. The MVP must be boring, reliable, and easy to recover from when something goes wrong on stage.</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Tech Stack</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">| Layer | Choice | Version (indicative) |</span>
+<span class="cmd-t">|---|---|---|</span>
+<span class="cmd-t">| Framework | Next.js (App Router) | 15.x |</span>
+<span class="cmd-t">| UI | React + TypeScript | React 19.x |</span>
+<span class="cmd-t">| Styling | Tailwind CSS | 4.x |</span>
+<span class="cmd-t">| Schema validation | Zod | latest |</span>
+<span class="cmd-t">| Markdown parsing | gray-matter + js-yaml | latest |</span>
+<span class="cmd-t">| Database | Supabase (Postgres, hosted) | free tier |</span>
+<span class="cmd-t">| Realtime | Supabase Realtime channels | free tier |</span>
+<span class="cmd-t">| Auth | Custom — `ADMIN_CODE` env var + `X-Admin-Code` header | n/a |</span>
+<span class="cmd-t">| Charts | Recharts (bar/scale) + react-wordcloud | latest |</span>
+<span class="cmd-t">| Hosting | Vercel (Hobby tier) | n/a |</span>
+<span class="cmd-t">| Load testing | k6 (via GitHub Actions or local) | latest |</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Why this stack:** one platform for DB + realtime (Supabase) plus one platform for Next + serverless API (Vercel). Two services total. No Docker, no orchestration, no custom WebSocket server to babysit on stage.</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Data Model</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">Questions live in `questions.md`, NOT in the database. The DB only stores runtime state: live sessions, participants, and votes.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### `sessions`</span>
+<span class="cmd-t">- `id` (uuid, PK)</span>
+<span class="cmd-t">- `code` (string, 6 digits, UNIQUE) — what participants type to join</span>
+<span class="cmd-t">- `questions_source` (string) — filename/hash of the loaded MD, for traceability</span>
+<span class="cmd-t">- `questions_snapshot` (jsonb) — **frozen at session start**, the source of truth for this run. Edits to `questions.md` after session start MUST NOT affect the running session.</span>
+<span class="cmd-t">- `current_question_index` (int, default 0)</span>
+<span class="cmd-t">- `display_token` (uuid) — one-time token used by the laptop display panel to authenticate read-only without typing `ADMIN_CODE`</span>
+<span class="cmd-t">- `status` (enum: `draft` | `active` | `ended`)</span>
+<span class="cmd-t">- `created_at`, `started_at`, `ended_at`</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### `participants`</span>
+<span class="cmd-t">- `id` (uuid, PK)</span>
+<span class="cmd-t">- `session_id` (uuid, FK → sessions)</span>
+<span class="cmd-t">- `client_token` (string, UNIQUE per session) — generated client-side at first join, stored in localStorage. Anonymous identity, no PII.</span>
+<span class="cmd-t">- `joined_at`</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### `votes`</span>
+<span class="cmd-t">- `id` (uuid, PK)</span>
+<span class="cmd-t">- `session_id` (uuid, FK)</span>
+<span class="cmd-t">- `participant_id` (uuid, FK)</span>
+<span class="cmd-t">- `question_index` (int) — references position in `sessions.questions_snapshot`</span>
+<span class="cmd-t">- `question_type` (string) — denormalized: `single_choice` | `multiple_choice` | `word_cloud` | `open_ended` | `scale`</span>
+<span class="cmd-t">- `value` (jsonb) — shape varies by type:</span>
+<span class="cmd-t">  - `single_choice`: `{ &quot;option_index&quot;: 2 }`</span>
+<span class="cmd-t">  - `multiple_choice`: `{ &quot;option_indices&quot;: [1, 3] }`</span>
+<span class="cmd-t">  - `word_cloud`: `{ &quot;words&quot;: [&quot;focus&quot;, &quot;energy&quot;] }`</span>
+<span class="cmd-t">  - `open_ended`: `{ &quot;text&quot;: &quot;Great session&quot; }`</span>
+<span class="cmd-t">  - `scale`: `{ &quot;value&quot;: 7 }`</span>
+<span class="cmd-t">- `created_at`</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Constraints &amp; indexes</span>
+<span class="cmd-t">- **`UNIQUE (session_id, participant_id, question_index)` on `votes`** — non-negotiable. This is the only robust mechanism preventing duplicate votes under race conditions. Application-level checks are optimizations, not safety.</span>
+<span class="cmd-t">- UNIQUE INDEX on `sessions.code`</span>
+<span class="cmd-t">- Composite INDEX on `votes (session_id, question_index)` — hot path for live aggregation</span>
+<span class="cmd-t">- INDEX on `participants.client_token`</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Explicitly NOT in the schema</span>
+<span class="cmd-t">- ❌ Questions table — they live in the markdown file</span>
+<span class="cmd-t">- ❌ Options table — options are nested in the jsonb snapshot</span>
+<span class="cmd-t">- ❌ Users / presenters table — auth is a single env var</span>
+<span class="cmd-t">- ❌ Aggregation caches / materialized views — `COUNT GROUP BY` at 200 votes is instant</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Questions Markdown Format</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">The presenter authors `questions.md` at the repo root. Each question is a YAML frontmatter block separated by `---`.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Supported question types (5 total)</span>
+<span class="cmd-t"></span>
+<span class="cmd-c">```markdown</span>
+<span class="cmd-t">---</span>
+<span class="cmd-t">type: single_choice</span>
+<span class="cmd-t">question: How often do you use AI tools?</span>
+<span class="cmd-t">options:</span>
+<span class="cmd-t">  - Every day</span>
+<span class="cmd-t">  - A few times a week</span>
+<span class="cmd-t">  - Occasionally</span>
+<span class="cmd-t">  - Rarely or never</span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t">type: multiple_choice</span>
+<span class="cmd-t">question: Which AI tools do you use? (select all that apply)</span>
+<span class="cmd-t">options:</span>
+<span class="cmd-t">  - ChatGPT</span>
+<span class="cmd-t">  - Claude</span>
+<span class="cmd-t">  - Gemini</span>
+<span class="cmd-t">  - GitHub Copilot</span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t">type: word_cloud</span>
+<span class="cmd-t">question: Describe today&#x27;s session in one word</span>
+<span class="cmd-t">max_words: 3</span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t">type: open_ended</span>
+<span class="cmd-t">question: What&#x27;s one thing you&#x27;d like to learn next?</span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t">type: scale</span>
+<span class="cmd-t">question: How likely are you to recommend this workshop?</span>
+<span class="cmd-t">min: 0</span>
+<span class="cmd-t">max: 10</span>
+<span class="cmd-t">labels: [&quot;Not at all likely&quot;, &quot;Extremely likely&quot;]</span>
+<span class="cmd-t">---</span>
+<span class="cmd-c">```</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Key distinction: `single_choice` vs `multiple_choice`</span>
+<span class="cmd-t">- `single_choice` — participant picks exactly one option; vote value: `{ &quot;option_index&quot;: N }`</span>
+<span class="cmd-t">- `multiple_choice` — participant picks one or more options; vote value: `{ &quot;option_indices&quot;: [N, M, ...] }`</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Validation rules (Zod)</span>
+<span class="cmd-t">- `type` must be one of the 5 supported types</span>
+<span class="cmd-t">- `question` required, non-empty string</span>
+<span class="cmd-t">- `single_choice` / `multiple_choice`: `options` array, 2-10 items, non-empty strings</span>
+<span class="cmd-t">- `word_cloud`: `max_words` optional, default 3, range 1-5</span>
+<span class="cmd-t">- `scale`: `min &lt; max`, both integers, range -100 to 100; `labels` optional 2-element array</span>
+<span class="cmd-t">- Validation errors MUST be reported with question index and clear message (e.g. `&quot;Question 3 (scale): max must be greater than min&quot;`)</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Key User Flows</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Flow A — Presenter (developer)</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Pre-event setup (one-time):**</span>
+<span class="cmd-t">1. Clone repo, configure `.env` with `ADMIN_CODE`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`</span>
+<span class="cmd-t">2. Author/edit `questions.md`</span>
+<span class="cmd-t">3. Run `npm run validate` locally to confirm the MD parses cleanly</span>
+<span class="cmd-t">4. Deploy to Vercel</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Event day — three devices, three URLs:**</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">| Device | Page | Purpose | Realtime? |</span>
+<span class="cmd-t">|---|---|---|---|</span>
+<span class="cmd-t">| Presenter&#x27;s smartphone | `/admin` → `/admin/control` | Control flow (Next / Prev / End) | Polling |</span>
+<span class="cmd-t">| Laptop (projected) | `/admin/display?token=...` | Show big join code + live aggregate | **Yes — Supabase Realtime** |</span>
+<span class="cmd-t">| Audience phones | `/s/:code` | Vote and wait | Polling |</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Detailed sequence:**</span>
+<span class="cmd-t">1. Presenter opens `/admin` on smartphone, enters `ADMIN_CODE` → stored in localStorage → API verified</span>
+<span class="cmd-t">2. Presenter clicks &quot;Start new session&quot; → server parses `questions.md`, validates with Zod, creates `sessions` row with snapshot + generates 6-digit code + generates `display_token`</span>
+<span class="cmd-t">3. UI shows: control panel link + QR code that opens `/admin/display?token=&lt;display_token&gt;` on the laptop</span>
+<span class="cmd-t">4. Presenter scans QR with laptop browser → display panel opens, subscribes to Supabase Realtime channel for that session</span>
+<span class="cmd-t">5. Display panel shows the join code in massive type + participant counter + the current question&#x27;s live aggregation</span>
+<span class="cmd-t">6. Control panel on smartphone shows: current question name, participant count, big `← Previous` / `Next →` / `End` buttons</span>
+<span class="cmd-t">7. Presenter taps `Next` → API updates `current_question_index` → Supabase Realtime instantly updates the laptop display → audience phones see the change within ~2s via polling</span>
+<span class="cmd-t">8. At end: presenter taps `End` (with confirmation modal) → session status `ended` → audience sees &quot;Thanks for participating!&quot;</span>
+<span class="cmd-t">9. After ending: presenter can navigate to `/admin/results/&lt;session_id&gt;` to review full results and export CSV or PDF</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Flow B — Audience</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">1. Open the app on phone, see &quot;Enter code&quot; with numeric keypad</span>
+<span class="cmd-t">2. Enter 6-digit code → API validates session exists and is `active`</span>
+<span class="cmd-t">3. Client generates `client_token` (UUIDv4), stores in localStorage under `menti_token_&lt;session_id&gt;`</span>
+<span class="cmd-t">4. Creates `participant` record (idempotent: if `client_token` already exists for this session, returns existing)</span>
+<span class="cmd-t">5. Redirected to `/s/:code`, sees current question with type-specific UI:</span>
+<span class="cmd-t">   - **single_choice**: large tap-target buttons (≥ 44px), one per option, single selection</span>
+<span class="cmd-t">   - **multiple_choice**: large tap-target buttons, multi-select allowed</span>
+<span class="cmd-t">   - **word_cloud**: text input + submit, up to `max_words`</span>
+<span class="cmd-t">   - **open_ended**: textarea + submit</span>
+<span class="cmd-t">   - **scale**: slider with **current value displayed large above the slider** (mobile UX fix — sliders are hard to read on touch without explicit value feedback)</span>
+<span class="cmd-t">6. Submit → POST vote with `client_token` and `question_index`</span>
+<span class="cmd-t">7. UI switches to &quot;✓ Submitted, waiting for next question...&quot; with polling at 2s</span>
+<span class="cmd-t">8. On `current_question_index` change → fetch new question → render</span>
+<span class="cmd-t">9. On `status = ended` → &quot;Thanks for participating!&quot;</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Rejoin behavior:** if the participant refreshes or returns later, localStorage `client_token` resolves them back to the same participant. If they already voted on the current question, they see the &quot;waiting&quot; screen directly.</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## MVP Scope</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### IN</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Question types:**</span>
+<span class="cmd-t">- Single choice (bar chart aggregation, single selection)</span>
+<span class="cmd-t">- Multiple choice (bar chart aggregation, multi-select)</span>
+<span class="cmd-t">- Word cloud (frequency-based)</span>
+<span class="cmd-t">- Open-ended (scrolling cards)</span>
+<span class="cmd-t">- Scale (slider input, mean + distribution histogram)</span>
+<span class="cmd-t"></span>
+<span class="cmd-b">**Core features:**</span>
+<span class="cmd-t">- Markdown-based question authoring (`questions.md` in repo)</span>
+<span class="cmd-t">- `npm run validate` CLI script for pre-event MD validation</span>
+<span class="cmd-t">- 6-digit join code, anonymous audience (no login, no PII)</span>
+<span class="cmd-t">- Session control via three separate views (smartphone control + laptop display + audience)</span>
+<span class="cmd-t">- One vote per participant per question (enforced by DB UNIQUE constraint)</span>
+<span class="cmd-t">- Live aggregation on display panel via Supabase Realtime</span>
+<span class="cmd-t">- Late vote acceptance — votes for non-current questions are still recorded</span>
+<span class="cmd-t">- Pre-event warm-up health check endpoint (`/api/health`)</span>
+<span class="cmd-t">- Mobile-first audience UI, mobile-first control panel UI, desktop-optimized display UI</span>
+<span class="cmd-t">- Post-session results page (`/admin/results/[id]`) with CSV export and PDF/print export</span>
+<span class="cmd-t">- k6 load test suite with GitHub Actions workflow (target: 200 VUs, 5 question types supported)</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### OUT (deferred to v2+)</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">- Quiz with correct answers, points, leaderboard, timers</span>
+<span class="cmd-t">- Q&amp;A flow (audience asks presenter)</span>
+<span class="cmd-t">- Ranking, image choice questions</span>
+<span class="cmd-t">- Multi-presenter / accounts / multi-tenancy / dashboard</span>
+<span class="cmd-t">- GUI for question editing (markdown stays the authoring interface)</span>
+<span class="cmd-t">- Markdown upload from web UI (current MVP: file lives in repo only)</span>
+<span class="cmd-t">- Branding, themes, custom colors</span>
+<span class="cmd-t">- Moderation of open-ended responses</span>
+<span class="cmd-t">- Live reactions, emojis</span>
+<span class="cmd-t">- Post-event analytics, historical sessions browser</span>
+<span class="cmd-t">- Internationalization (English only)</span>
+<span class="cmd-t">- Animations on question transitions (nice-to-have, not MUST)</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Architecture Decisions &amp; Trade-offs</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 1. Questions in markdown, not in DB</span>
+<span class="cmd-b">**Decision:** `questions.md` is the source of truth at authoring time; at session start it is parsed, validated, and **frozen as a jsonb snapshot in `sessions.questions_snapshot`**.</span>
+<span class="cmd-b">**Trade-off:** Editing the MD doesn&#x27;t update running sessions (good — immutability). Costs ~10-50KB of jsonb per session (negligible). No CRUD on questions in the API (simpler).</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 2. Polling for audience, realtime only for laptop display</span>
+<span class="cmd-b">**Decision:** Only the laptop `/admin/display` subscribes to Supabase Realtime channels. Audience phones and the smartphone control panel use HTTP polling (2-5s intervals).</span>
+<span class="cmd-b">**Trade-off:** Audience sees question changes with up to 2s delay. In exchange, total realtime connections at peak = 1 — way under the free tier limit. Robust by design.</span>
+<span class="cmd-b">**Critical rule:** never add `.channel(...).subscribe()` to audience code paths. If a feature seems to require it, reconsider with polling first.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 3. Smartphone control / Laptop display split</span>
+<span class="cmd-b">**Decision:** Presenter holds smartphone for controls; laptop projects display panel. They are different routes (`/admin/control` vs `/admin/display`) authenticated differently (`X-Admin-Code` header vs `display_token` query param).</span>
+<span class="cmd-b">**Trade-off:** Two UIs to build instead of one unified presenter view, but each is simpler and ergonomically correct for its device.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 4. Auth = single env var + display token</span>
+<span class="cmd-b">**Decision:** No accounts, no Supabase Auth, no JWT. Smartphone admin: `ADMIN_CODE` typed once, stored in localStorage, sent as `X-Admin-Code` header on admin API calls, **verified server-side** on every request. Laptop display: short-lived `display_token` (per-session UUID) in query string, resolved via `/api/display/resolve?token=&lt;token&gt;`, read-only access.</span>
+<span class="cmd-b">**Trade-off:** Single tenant. Fine for MVP.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 5. Late vote acceptance</span>
+<span class="cmd-b">**Decision:** A vote arriving for a `question_index` different from the session&#x27;s current index is accepted, not rejected. The DB UNIQUE constraint still prevents duplicates.</span>
+<span class="cmd-b">**Trade-off:** Slightly weird semantics but never frustrates a user who tapped Submit a fraction late.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 6. Throttled UI aggregation on display</span>
+<span class="cmd-b">**Decision:** Display panel maintains an incremental in-memory aggregate, updated as realtime events arrive but **re-rendering throttled to ~250-500ms**. Word cloud layout recomputation throttled to ~1s.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 7. Snapshot in jsonb vs SessionQuestion table</span>
+<span class="cmd-b">**Decision:** `questions_snapshot` is a single jsonb column on `sessions`, not a separate relational table.</span>
+<span class="cmd-b">**Trade-off:** Not relationally pure, can&#x27;t JOIN questions. But: one row read at session load, no schema migrations for new question types. Worth it for 5 question types and 5-20 questions per session.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 8. single_choice vs multiple_choice distinction</span>
+<span class="cmd-b">**Decision:** `single_choice` and `multiple_choice` are separate types with distinct vote value shapes (`option_index` vs `option_indices`). The aggregation logic and input components are separate.</span>
+<span class="cmd-b">**Trade-off:** More types to maintain, but cleaner semantics and avoids forcing participants to mentally understand &quot;pick one vs pick many&quot; from a generic UI.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### 9. Post-session CSV/PDF export</span>
+<span class="cmd-b">**Decision:** Results page at `/admin/results/[id]` implemented in MVP. Available only after session `status = ended`. CSV generated entirely client-side (no server endpoint needed). PDF via `window.print()` with print-specific CSS.</span>
+<span class="cmd-b">**Trade-off:** Basic formatting. Adequate for post-event review and sharing with stakeholders.</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Key Technical Risks &amp; Mitigations</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">1. **Supabase Realtime connection limit** → audience uses polling; only laptop display uses realtime. Verify limit from Supabase dashboard on event day.</span>
+<span class="cmd-t">2. **Duplicate votes race condition** → DB UNIQUE constraint + `INSERT ... ON CONFLICT DO NOTHING`. Never rely on application-level checks for uniqueness.</span>
+<span class="cmd-t">3. **Malformed `questions.md` discovered live** → strict Zod validation with per-question error messages. `npm run validate` script in pre-event checklist.</span>
+<span class="cmd-t">4. **Aggregation lag / flicker on display** → throttled re-render (250-500ms), incremental client-side aggregation.</span>
+<span class="cmd-t">5. **Cold start on event day after long idle** → pre-event warm-up: hit `/api/health`, create a dummy session, do a test vote, then start fresh.</span>
+<span class="cmd-t">6. **Load under 200 concurrent participants** → k6 load test (`load-test/`) validates this. Run smoke test (5 VUs) at least once before event, full 200-VU run once to confirm production holds up.</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Conventions</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Code style</span>
+<span class="cmd-t">- **TypeScript everywhere**, strict mode on</span>
+<span class="cmd-t">- ESLint default Next.js config + `@typescript-eslint/no-explicit-any` set to error</span>
+<span class="cmd-t">- Prettier with default config, 2-space indent</span>
+<span class="cmd-t">- File naming: `kebab-case.tsx` for components, `camelCase.ts` for utilities, `route.ts` for API routes</span>
+<span class="cmd-t">- React components: function components only, no class components</span>
+<span class="cmd-t">- State: local `useState` and `useReducer`. No Redux, no Zustand, no global state library.</span>
+<span class="cmd-t">- Data fetching: native `fetch` + `useEffect` for polling. No SWR, no React Query.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Folder structure</span>
+<span class="cmd-c">```</span>
+<span class="cmd-t">/app</span>
+<span class="cmd-t">  /admin</span>
+<span class="cmd-t">    /control       → smartphone control panel</span>
+<span class="cmd-t">    /display       → laptop display panel (read-only via display_token)</span>
+<span class="cmd-t">    /results/[id]  → post-session results with CSV/PDF export (admin-only)</span>
+<span class="cmd-t">    page.tsx       → admin code entry</span>
+<span class="cmd-t">  /s</span>
+<span class="cmd-t">    /[code]        → audience view</span>
+<span class="cmd-t">  /api</span>
+<span class="cmd-t">    /admin</span>
+<span class="cmd-t">      /sessions</span>
+<span class="cmd-t">        route.ts          → POST (create)</span>
+<span class="cmd-t">        /[id]</span>
+<span class="cmd-t">          route.ts        → PATCH (next/prev/end)</span>
+<span class="cmd-t">          state/route.ts  → GET (polled by control panel)</span>
+<span class="cmd-t">          results/route.ts → GET (post-session full results)</span>
+<span class="cmd-t">      /verify/route.ts    → POST (verify admin code)</span>
+<span class="cmd-t">    /display</span>
+<span class="cmd-t">      /resolve/route.ts   → GET (resolve display_token → session_id)</span>
+<span class="cmd-t">    /sessions</span>
+<span class="cmd-t">      /by-code/[code]/route.ts → GET</span>
+<span class="cmd-t">      /[id]</span>
+<span class="cmd-t">        state/route.ts        → GET (polled by audience)</span>
+<span class="cmd-t">        votes/route.ts        → POST</span>
+<span class="cmd-t">        participants/route.ts → POST</span>
+<span class="cmd-t">        aggregate/route.ts    → GET (per-session live aggregate)</span>
+<span class="cmd-t">        questions/[index]/route.ts → GET (single question data)</span>
+<span class="cmd-t">    /health/route.ts      → GET (warm-up)</span>
+<span class="cmd-t">/lib</span>
+<span class="cmd-t">  /db              → Supabase client + typed queries</span>
+<span class="cmd-t">  /md              → markdown parser + Zod schemas</span>
+<span class="cmd-t">  /realtime        → realtime channel helpers (admin/display ONLY)</span>
+<span class="cmd-t">/components</span>
+<span class="cmd-t">  /admin           → control + display + results components</span>
+<span class="cmd-t">  /audience        → audience input components by question type</span>
+<span class="cmd-t">  /shared          → buttons, layout, QRCode, WordCloud, etc.</span>
+<span class="cmd-t">/load-test         → k6 load test script + GitHub Actions workflow + README</span>
+<span class="cmd-t">/scripts</span>
+<span class="cmd-t">  validate.ts      → npm run validate script</span>
+<span class="cmd-t">/questions.md      → the source of truth for questions</span>
+<span class="cmd-c">```</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Naming</span>
+<span class="cmd-t">- DB tables: plural snake_case (`sessions`, `participants`, `votes`)</span>
+<span class="cmd-t">- DB columns: snake_case</span>
+<span class="cmd-t">- TypeScript: camelCase for variables/functions, PascalCase for types/components</span>
+<span class="cmd-t">- API routes: REST-ish; admin endpoints under `/api/admin/*`, public under `/api/sessions/*`</span>
+<span class="cmd-t">- Realtime channels: `session:{session_id}` for the per-session channel</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Error handling</span>
+<span class="cmd-t">- API errors: structured JSON `{ error: { code: string, message: string, details?: unknown } }`</span>
+<span class="cmd-t">- Validation errors from Zod: surfaced with question index when relevant</span>
+<span class="cmd-t">- Never return generic 500 without logging the underlying error server-side</span>
+<span class="cmd-t">- User-facing error messages always actionable, never raw stack traces</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Setup Commands</span>
+<span class="cmd-t"></span>
+<span class="cmd-c">```bash</span>
+<span class="cmd-h1"># install</span>
+<span class="cmd-t">npm install</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># environment</span>
+<span class="cmd-t">cp .env.example .env.local</span>
+<span class="cmd-h1"># fill in: ADMIN_CODE, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># database: run migrations in Supabase SQL editor (see /supabase/migrations/)</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># validate questions.md</span>
+<span class="cmd-t">npm run validate</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># dev</span>
+<span class="cmd-t">npm run dev</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># build &amp; test production locally</span>
+<span class="cmd-t">npm run build &amp;&amp; npm start</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># deploy</span>
+<span class="cmd-t">git push origin main   # Vercel auto-deploys</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1"># load test (requires k6 installed)</span>
+<span class="cmd-t">BASE_URL=https://cmcc-poll.vercel.app ADMIN_CODE=your-code VUS=5 k6 run load-test/k6-script.js</span>
+<span class="cmd-c">```</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Pre-event checklist (MANDATORY)</span>
+<span class="cmd-t">1. `npm run validate` — confirm `questions.md` parses with zero errors</span>
+<span class="cmd-t">2. Deploy latest to Vercel and verify deploy success</span>
+<span class="cmd-t">3. Open `/api/health` from a browser — must return 200 (warms up Vercel + Supabase)</span>
+<span class="cmd-t">4. Open `/admin` on smartphone, enter `ADMIN_CODE`, create a test session</span>
+<span class="cmd-t">5. Scan QR on laptop, confirm display panel loads and shows join code</span>
+<span class="cmd-t">6. Open `/s/&lt;code&gt;` on a second phone, join, vote on first question, verify it shows on laptop</span>
+<span class="cmd-t">7. End test session, verify `/admin/results/&lt;id&gt;` loads and CSV export works</span>
+<span class="cmd-t">8. Run k6 smoke test (`VUS=5`) to confirm production stack handles load</span>
+<span class="cmd-t">9. Wait less than 30 minutes before going live (else cold start risk returns) — if waiting longer, repeat step 3</span>
+<span class="cmd-t"></span>
+<span class="cmd-t">---</span>
+<span class="cmd-t"></span>
+<span class="cmd-h1">## Notes for Claude Code</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Prioritize</span>
+<span class="cmd-t">- **Reliability over features.** This runs live in front of 200 people. A boring app that works is infinitely better than a fancy app that flakes.</span>
+<span class="cmd-t">- **Server-side validation everywhere.** Never trust the client. Especially `votes` POST and admin API auth.</span>
+<span class="cmd-t">- **DB constraints over application checks** for invariants (uniqueness, FK integrity). The DB is the last line of defense.</span>
+<span class="cmd-t">- **Mobile-first** for `/s/*` and `/admin/control`. Test in Chrome DevTools mobile emulation at iPhone SE resolution (smallest reasonable target). Tap targets ≥ 44px.</span>
+<span class="cmd-t">- **Clear error messages** on the admin side, especially for markdown validation errors.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Avoid</span>
+<span class="cmd-t">- **Adding realtime subscriptions to audience code paths** (`/app/s/*` or `/components/audience/*`). Only `/app/admin/display` may use `supabase.channel(...).subscribe()`.</span>
+<span class="cmd-t">- **New dependencies.** Stack is locked: Next, React, Tailwind, Zod, gray-matter, Supabase JS, Recharts, react-wordcloud. Adding anything else requires explicit discussion.</span>
+<span class="cmd-t">- **Premature optimization.** No caching layers, no Redis, no memoization beyond what React naturally needs.</span>
+<span class="cmd-t">- **Global state libraries.** No Redux, Zustand, Jotai, Recoil.</span>
+<span class="cmd-t">- **Custom WebSocket servers / Socket.io / SSE.** Supabase Realtime only.</span>
+<span class="cmd-t">- **Authentication beyond what&#x27;s specified.** No Supabase Auth, no NextAuth, no JWT.</span>
+<span class="cmd-t">- **Accepting unvalidated input into the votes API.** Every `value` payload must be validated against the question&#x27;s type from the snapshot before insert.</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Ask for confirmation before</span>
+<span class="cmd-t">- **Adding a new question type.** The 5 types are scoped intentionally.</span>
+<span class="cmd-t">- **Changing the markdown format.** It&#x27;s the user-facing contract. Breaking it breaks the presenter&#x27;s existing files.</span>
+<span class="cmd-t">- **Modifying the auth model.**</span>
+<span class="cmd-t">- **Adding any external service** (email, SMS, analytics, error tracking). Free tier discipline.</span>
+<span class="cmd-t">- **Touching the DB UNIQUE constraint on votes.** It&#x27;s load-bearing.</span>
+<span class="cmd-t">- **Refactoring `questions_snapshot` into a relational structure.**</span>
+<span class="cmd-t"></span>
+<span class="cmd-h2">### Default to simple</span>
+<span class="cmd-t">When in doubt between a clever solution and a boring one, pick boring. This is a MVP for a one-shot live event. Cleverness is technical debt; boringness is what ships on time and runs on stage without surprises.</span></pre></div>
+      </div>
+
+      <div class="cmd-side">
+        <div class="cmd-point">
+          <div class="cmd-point-t">Written once</div>
+          <div class="cmd-point-d">Before any code, in the repo root</div>
+        </div>
+        <div class="cmd-point">
+          <div class="cmd-point-t">Read every time</div>
+          <div class="cmd-point-d">Same foundation for every coding session</div>
+        </div>
+        <div class="cmd-point">
+          <div class="cmd-point-t">No drift</div>
+          <div class="cmd-point-d">Decisions don't get rediscovered or contradicted</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10 — PRESENTER FLOW -->
+  <section class="slide flow" id="slide-9">
+    <div class="flow-tag">Artifact 3 &mdash; user flows</div>
+    <h1 class="flow-title">Presenter flow <em>&mdash; two devices</em></h1>
+    <div class="flow-stage">
+      <svg viewBox="0 0 680 470" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="fla" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#6B7FA3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <g><rect class="fl-fill-gray" x="250" y="14" width="180" height="42" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="40" text-anchor="middle">Enter admin code</text></g>
+        <line class="fl-arr" x1="340" y1="56" x2="340" y2="82" marker-end="url(#fla)"/>
+
+        <g><rect class="fl-fill-blue" x="240" y="82" width="200" height="52" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="102" text-anchor="middle">Start session</text>
+          <text class="fl-ts" x="340" y="120" text-anchor="middle">Parse + validate questions.md</text></g>
+        <line class="fl-arr" x1="340" y1="134" x2="340" y2="160" marker-end="url(#fla)"/>
+
+        <g><rect class="fl-fill-blue" x="240" y="160" width="200" height="52" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="180" text-anchor="middle">Session created</text>
+          <text class="fl-ts" x="340" y="198" text-anchor="middle">6-digit code + display token</text></g>
+
+        <path class="fl-arr" d="M290 212 L290 250 L150 250 L150 280" marker-end="url(#fla)"/>
+        <path class="fl-arr" d="M390 212 L390 250 L530 250 L530 280" marker-end="url(#fla)"/>
+
+        <g><rect class="fl-fill-teal" x="45" y="280" width="210" height="52" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="150" y="300" text-anchor="middle">Control panel (phone)</text>
+          <text class="fl-ts" x="150" y="318" text-anchor="middle">Next / prev / end</text></g>
+
+        <g><rect class="fl-fill-purple" x="425" y="280" width="210" height="52" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="530" y="300" text-anchor="middle">Display panel (laptop)</text>
+          <text class="fl-ts" x="530" y="318" text-anchor="middle">Projected live results</text></g>
+
+        <text class="fl-ts" x="340" y="302" text-anchor="middle">realtime</text>
+        <line class="fl-arr" x1="425" y1="306" x2="257" y2="306" marker-end="url(#fla)"/>
+
+        <path class="fl-arr" d="M150 332 L150 372 L330 372" marker-end="url(#fla)"/>
+
+        <g><rect class="fl-fill-teal" x="330" y="350" width="210" height="52" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="435" y="370" text-anchor="middle">Live voting loop</text>
+          <text class="fl-ts" x="435" y="388" text-anchor="middle">Advance through questions</text></g>
+
+        <line class="fl-arr" x1="435" y1="402" x2="435" y2="424" marker-end="url(#fla)"/>
+        <g><rect class="fl-fill-green" x="325" y="424" width="220" height="40" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="435" y="448" text-anchor="middle">End &rarr; results + export</text></g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- SLIDE 11 — AUDIENCE FLOW -->
+  <section class="slide flow" id="slide-10">
+    <div class="flow-tag">Artifact 3 &mdash; user flows</div>
+    <h1 class="flow-title">Audience flow <em>&mdash; join, vote, wait</em></h1>
+    <div class="flow-stage">
+      <svg viewBox="0 0 680 460" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="fla2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#6B7FA3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <g><rect class="fl-fill-gray" x="250" y="14" width="180" height="42" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="40" text-anchor="middle">Enter 6-digit code</text></g>
+        <line class="fl-arr" x1="340" y1="56" x2="340" y2="80" marker-end="url(#fla2)"/>
+
+        <g><rect class="fl-fill-blue" x="240" y="80" width="200" height="50" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="99" text-anchor="middle">Join session</text>
+          <text class="fl-ts" x="340" y="117" text-anchor="middle">Anonymous client token</text></g>
+        <line class="fl-arr" x1="340" y1="130" x2="340" y2="154" marker-end="url(#fla2)"/>
+
+        <g><rect class="fl-fill-teal" x="240" y="154" width="200" height="50" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="173" text-anchor="middle">Receive question</text>
+          <text class="fl-ts" x="340" y="191" text-anchor="middle">Type-specific input</text></g>
+        <line class="fl-arr" x1="340" y1="204" x2="340" y2="228" marker-end="url(#fla2)"/>
+
+        <g><rect class="fl-fill-teal" x="270" y="228" width="140" height="40" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="252" text-anchor="middle">Submit vote</text></g>
+        <line class="fl-arr" x1="340" y1="268" x2="340" y2="292" marker-end="url(#fla2)"/>
+
+        <g><rect class="fl-fill-amber" x="240" y="292" width="200" height="50" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="311" text-anchor="middle">DB dedup check</text>
+          <text class="fl-ts" x="340" y="329" text-anchor="middle">UNIQUE constraint guard</text></g>
+        <line class="fl-arr" x1="340" y1="342" x2="340" y2="366" marker-end="url(#fla2)"/>
+
+        <g><rect class="fl-fill-purple" x="240" y="366" width="200" height="50" rx="8" stroke-width="0.5"/>
+          <text class="fl-th" x="340" y="385" text-anchor="middle">Poll for next question</text>
+          <text class="fl-ts" x="340" y="403" text-anchor="middle">Every 2 seconds</text></g>
+
+        <path class="fl-arr" d="M240 391 L120 391 L120 179 L240 179" marker-end="url(#fla2)"/>
+        <text class="fl-ts" x="105" y="289" text-anchor="middle" transform="rotate(-90 105 289)">next question</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- SLIDE 12 — CLOSING -->
+  <section class="slide close" id="slide-11">
+    <div class="close-tag">Back to the high jump</div>
+    <div class="close-line">The foam mats didn't eliminate the best jumpers.</div>
+    <div class="close-hero">They <em>separated them</em> from everyone else.</div>
+    <div class="close-final">
+      AI won't eliminate software engineers. But it makes the difference between <strong>a software engineer</strong> and <strong>someone who writes code</strong> much more visible than it used to be. <br/><br/>That's the opportunity. And the choice is ours.
+    </div>
+  </section>
+
+  <!-- SLIDE 13 — THANKS -->
+  <section class="slide thanks" id="slide-12">
+    <img class="thanks-img" src="Dick_fosbury_olimpiade_1968.png" alt="Dick Fosbury, 1968 Olympics"
+      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+    <div class="thanks-placeholder" style="display:none;">
+      <span style="font-size:24px;">&#128444;</span>
+      <span style="font-family:var(--font-m); font-size:11px;">save image as fosbury-1968.png</span>
+    </div>
+    <div class="thanks-overlay"></div>
+    <div class="thanks-content">
+      <div class="thanks-tag">One last thing</div>
+      <h1 class="thanks-title">Thank you.<br/><em>Questions?</em></h1>
+      <p class="thanks-q">Let's talk about how you're using your foam mat.</p>
+      <div class="thanks-meta">
+        <span class="thanks-name">Matteo Scuro</span>
+        <span class="thanks-div"></span>
+        <span class="thanks-handle">Hidden Layer Society &middot; Lecce 2026</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<nav class="nav">
+  <button class="nav-btn" id="prev" disabled>&#8592;</button>
+  <div class="nav-dots" id="dots"></div>
+  <button class="nav-btn" id="next">&#8594;</button>
+  <span class="slide-counter" id="counter">1 / 13</span>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const counter = document.getElementById('counter');
+  let cur = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => go(i);
+    dotsEl.appendChild(d);
+  });
+
+  function go(to) {
+    if (to < 0 || to >= slides.length || to === cur) return;
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('out-left');
+    setTimeout(() => slides[cur].classList.remove('out-left'), 350);
+    cur = to;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===cur));
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    counter.textContent = `${cur+1} / ${slides.length}`;
+  }
+
+  prevBtn.onclick = () => go(cur-1);
+  nextBtn.onclick = () => go(cur+1);
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key==='ArrowDown') go(cur+1);
+    if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   go(cur-1);
+  });
+
+  // Fosbury video: click intro to play, video fades in, intro fades out
+  const fosIntro = document.getElementById('fosIntro');
+  const fosVideo = document.getElementById('fosVideo');
+  const fosControls = document.getElementById('fosControls');
+  const fosPlayPause = document.getElementById('fosPlayPause');
+  const fosMute = document.getElementById('fosMute');
+  if (fosIntro && fosVideo) {
+    fosIntro.addEventListener('click', () => {
+      fosIntro.classList.add('hidden');
+      fosVideo.classList.add('playing');
+      if (fosControls) fosControls.style.display = 'flex';
+      fosVideo.play().catch(() => {});
+    });
+    if (fosPlayPause) {
+      fosPlayPause.addEventListener('click', () => {
+        if (fosVideo.paused) { fosVideo.play(); fosPlayPause.innerHTML = '&#10074;&#10074;'; }
+        else { fosVideo.pause(); fosPlayPause.innerHTML = '&#9654;'; }
+      });
+    }
+    if (fosMute) {
+      fosMute.addEventListener('click', () => {
+        fosVideo.muted = !fosVideo.muted;
+        fosMute.innerHTML = fosVideo.muted ? '&#128263;' : '&#128266;';
+      });
+    }
+  }
+
+  // Mentimeter video: same click-to-play pattern
+  const mentiStage = document.getElementById('mentiStage');
+  const mentiVideo = document.getElementById('mentiVideo');
+  const mentiIntro = document.getElementById('mentiIntro');
+  if (mentiStage && mentiVideo) {
+    mentiStage.addEventListener('click', (e) => {
+      if (e.target.closest('#mentiControls')) return;
+      mentiIntro.style.opacity = '0';
+      mentiVideo.style.opacity = '1';
+      const mc = document.getElementById('mentiControls');
+      if (mc) mc.style.display = 'flex';
+      mentiVideo.play().catch(() => {});
+    });
+    const mentiPlayPause = document.getElementById('mentiPlayPause');
+    const mentiMute = document.getElementById('mentiMute');
+    if (mentiPlayPause) {
+      mentiPlayPause.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (mentiVideo.paused) { mentiVideo.play(); mentiPlayPause.innerHTML = '&#10074;&#10074;'; }
+        else { mentiVideo.pause(); mentiPlayPause.innerHTML = '&#9654;'; }
+      });
+    }
+    if (mentiMute) {
+      mentiMute.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mentiVideo.muted = !mentiVideo.muted;
+        mentiMute.innerHTML = mentiVideo.muted ? '&#128263;' : '&#128266;';
+      });
+    }
+  }
+
+  // Pause any playing video when navigating away from its slide
+  const origGo = go;
+  go = function(to) {
+    if (fosVideo && cur === 1 && to !== 1) fosVideo.pause();
+    if (mentiVideo && cur === 4 && to !== 4) mentiVideo.pause();
+    origGo(to);
+  };
+  prevBtn.onclick = () => go(cur-1);
+  nextBtn.onclick = () => go(cur+1);
+</script>
+</body>
+</html>
