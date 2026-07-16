@@ -345,6 +345,38 @@
   .fl-ts { fill: var(--muted-hi); font-family: var(--font-b); font-size: 12px; font-weight: 300; }
   .fl-arr { stroke: var(--muted); stroke-width: 1.5; fill: none; }
 
+  /* ─── LOAD TEST ─── */
+  .lt { justify-content: center; }
+  .lt-tag {
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .lt-tag::before { content:''; width: 28px; height: 1px; background: var(--green); display: block; }
+  .lt-title { font-family: var(--font-h); font-size: 32px; font-weight: 800; letter-spacing: -.02em; color: var(--text); margin-bottom: 24px; }
+  .lt-title em { color: var(--green); font-style: normal; }
+  .lt-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .lt-stat { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: var(--bg-card); }
+  .lt-stat-label { font-family: var(--font-m); font-size: 10.5px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .lt-stat-val { font-family: var(--font-h); font-size: 26px; font-weight: 700; color: var(--text); }
+  .lt-stat-val.ok { color: var(--green); }
+  .lt-stat-val.bad { color: #F97316; }
+  .lt-stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .lt-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+  .lt-bar-row { display: flex; align-items: center; gap: 14px; }
+  .lt-bar-label { font-family: var(--font-m); font-size: 12px; color: var(--muted-hi); width: 70px; flex-shrink: 0; }
+  .lt-bar-track { flex: 1; height: 20px; background: rgba(255,255,255,.04); border-radius: 5px; position: relative; overflow: hidden; }
+  .lt-bar-fill { height: 100%; background: linear-gradient(90deg, #F97316, #FB923C); border-radius: 5px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; }
+  .lt-bar-target { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--muted-hi); }
+  .lt-bar-val { font-family: var(--font-m); font-size: 11px; color: var(--bg); font-weight: 600; }
+  .lt-note {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--green-dim); border: 1px solid rgba(0,212,138,.3); border-left: 3px solid var(--green);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .lt-note-text { font-size: 13px; color: var(--muted-hi); line-height: 1.5; }
+  .lt-note-text strong { color: var(--text); font-weight: 500; }
+
   /* ─── CLOSING ─── */
   .close { justify-content: center; align-items: flex-start; }
   .close-tag {
@@ -1164,8 +1196,46 @@
     </div>
   </section>
 
-  <!-- SLIDE 12 — CLOSING -->
-  <section class="slide close" id="slide-11">
+  <!-- SLIDE 12 — LOAD TEST -->
+  <section class="slide lt" id="slide-11">
+    <div class="lt-tag">Artifact 4 &mdash; load test</div>
+    <h1 class="lt-title">Load testing is <em>discovery</em>, not validation</h1>
+
+    <div class="lt-stats" style="margin-bottom:16px;">
+      <div class="lt-stat"><div class="lt-stat-label">Concurrent users</div><div class="lt-stat-val">200</div><div class="lt-stat-sub">5s ramp-up</div></div>
+      <div class="lt-stat"><div class="lt-stat-label">Error rate</div><div class="lt-stat-val ok">0.51%</div><div class="lt-stat-sub">system held</div></div>
+      <div class="lt-stat"><div class="lt-stat-label">Votes recorded</div><div class="lt-stat-val">1268</div><div class="lt-stat-sub">no data loss</div></div>
+      <div class="lt-stat"><div class="lt-stat-label">Join p95</div><div class="lt-stat-val bad">31s</div><div class="lt-stat-sub">well over target</div></div>
+    </div>
+
+    <div class="lt-bars" style="margin-bottom:16px;">
+      <div class="lt-bar-row"><span class="lt-bar-label">Join</span>
+        <div class="lt-bar-track"><div class="lt-bar-target" style="left:6%"></div><div class="lt-bar-fill" style="width:100%"><span class="lt-bar-val">31.0s</span></div></div></div>
+      <div class="lt-bar-row"><span class="lt-bar-label">Vote</span>
+        <div class="lt-bar-track"><div class="lt-bar-target" style="left:11%"></div><div class="lt-bar-fill" style="width:44%"><span class="lt-bar-val">13.7s</span></div></div></div>
+      <div class="lt-bar-row"><span class="lt-bar-label">State</span>
+        <div class="lt-bar-track"><div class="lt-bar-target" style="left:2.5%"></div><div class="lt-bar-fill" style="width:19%"><span class="lt-bar-val">6.0s</span></div></div></div>
+      <div class="lt-bar-row"><span class="lt-bar-label">Question</span>
+        <div class="lt-bar-track"><div class="lt-bar-target" style="left:2.5%"></div><div class="lt-bar-fill" style="width:16%"><span class="lt-bar-val">5.1s</span></div></div></div>
+    </div>
+
+    <div style="display:flex; gap:14px; margin-bottom:16px;">
+       <div style="flex:1; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:var(--bg-card);">
+        <img src="k6-1.png" alt="k6 terminal output" style="width:100%; height:100%; object-fit:cover;"/>
+      </div>
+      <div style="flex:1; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:var(--bg-card);">
+        <img src="k6-2.png" alt="k6 thresholds and results" style="width:100%; height:100%; object-fit:cover;"/>
+      </div>
+    </div>
+
+    <div class="lt-note">
+      <span style="font-size:16px; color:var(--green);">&#10003;</span>
+      <div class="lt-note-text"><strong>Known risk, accepted by design.</strong> The free-tier connection limit was documented in CLAUDE.md before implementation. Under 200 concurrent users, latency could degrade &mdash; that was the known trade-off, not a discovery.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13 — CLOSING -->
+  <section class="slide close" id="slide-12">
     <div class="close-tag">Back to the high jump</div>
     <div class="close-line">The foam mats didn't eliminate the best jumpers.</div>
     <div class="close-hero">They <em>separated them</em> from everyone else.</div>
@@ -1174,8 +1244,8 @@
     </div>
   </section>
 
-  <!-- SLIDE 13 — THANKS -->
-  <section class="slide thanks" id="slide-12">
+  <!-- SLIDE 14 — THANKS -->
+  <section class="slide thanks" id="slide-13">
     <img class="thanks-img" src="fosbury-1968.png" alt="Dick Fosbury, 1968 Olympics"
       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
     <div class="thanks-placeholder" style="display:none;">
@@ -1201,7 +1271,7 @@
   <button class="nav-btn" id="prev" disabled>&#8592;</button>
   <div class="nav-dots" id="dots"></div>
   <button class="nav-btn" id="next">&#8594;</button>
-  <span class="slide-counter" id="counter">1 / 13</span>
+  <span class="slide-counter" id="counter">1 / 14</span>
 </nav>
 
 <script>
