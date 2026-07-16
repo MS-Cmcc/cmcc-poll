@@ -110,10 +110,11 @@
   /* ─── FOSBURY VIDEO ─── */
   .fosbury { padding: 0; justify-content: center; align-items: center; }
   .fos-stage { position: relative; width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center; overflow: hidden; z-index:-1}
+    display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .fos-video {
     max-width: 100%; max-height: 100%;
     opacity: 0; transition: opacity .6s ease;
+    position: relative; z-index: 1;
   }
   .fos-video.playing { opacity: 1; }
 
@@ -428,11 +429,10 @@
   <!-- SLIDE 2 — FOSBURY -->
   <section class="slide fosbury" id="slide-1">
     <div class="fos-stage">
-      <video class="fos-video" id="fosVideo" preload="auto" playsinline
-        src="How-One-Man-Changed-the-High-Jump-Forever.mp4"></video>
-      <div class="fos-controls" id="fosControls" style="position:sticky; bottom:28px; left:50%; transform:translateX(-50%); z-index:8; display:none; align-items:center; gap:10px; background:rgba(14,22,41,.9); border:1px solid var(--border-hi); border-radius:40px; padding:8px 14px; backdrop-filter:blur(12px);">
-        <button id="fosPlayPause" aria-label="Play/pause" style="width:34px; height:34px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;">&#10074;&#10074;</button>
-        <button id="fosMute" aria-label="Mute/unmute" style="width:34px; height:34px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;">&#128266;</button>
+      <div id="fosPlayerWrap" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+        <iframe id="fosFrame" style="width:100%; height:100%; opacity:0; transition:opacity .6s ease;"
+          src="" title="Fosbury video" frameborder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
       <div class="fos-intro" id="fosIntro">
         <div class="fos-intro-tag">Let's start here</div>
@@ -465,10 +465,6 @@
         <div class="codo-question">Is the Codographer <em>our competitor?</em></div>
       </div>
 
-      <!-- <div style="width:280px; flex-shrink:0; aspect-ratio:9/16; background:var(--bg-card); border:1px dashed var(--border-hi); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted);">
-        <span style="font-size:24px;">&#128444;</span>
-        <span style="font-family:var(--font-m); font-size:11px; letter-spacing:.05em;">image 9:16</span>
-      </div> -->
       <div style="width:280px; flex-shrink:0; aspect-ratio:9/16; border-radius:14px; overflow:hidden;">
         <img src="doc.jpg" alt="The Codographer" style="width:100%; height:100%; object-fit:cover;"/>
       </div>
@@ -505,16 +501,14 @@
         <p class="menti-why" style="font-size:17px;">The perfect excuse to test one idea: real engineering, on a small, solo, two-week project.</p>
       </div>
       <div class="menti-img" id="mentiStage" style="position:relative; overflow:hidden; cursor:pointer;">
-        <video id="mentiVideo" preload="auto" playsinline
-          src="Say_Hello_to_Mentimeter.mp4"
-          style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .5s ease;"></video>
+        <div id="mentiPlayerWrap" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+          <iframe id="mentiFrame" style="width:100%; height:100%; opacity:0; transition:opacity .5s ease;"
+            src="" title="Mentimeter video" frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
         <div id="mentiIntro" style="position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:10px; transition:opacity .4s ease;">
           <span class="ph-icon" style="font-size:22px; color:var(--green);">&#9654;</span>
           <span class="ph-label">Say hello to Mentimeter</span>
-        </div>
-        <div class="menti-controls" id="mentiControls" style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:5; display:none; align-items:center; gap:8px; background:rgba(14,22,41,.9); border:1px solid var(--border-hi); border-radius:40px; padding:6px 10px; backdrop-filter:blur(12px);">
-          <button id="mentiPlayPause" aria-label="Play/pause" style="width:28px; height:28px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px;">&#10074;&#10074;</button>
-          <button id="mentiMute" aria-label="Mute/unmute" style="width:28px; height:28px; border:1px solid var(--border-hi); border-radius:50%; background:var(--bg-card); color:var(--muted-hi); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;">&#128266;</button>
         </div>
       </div>
     </div>
@@ -1182,7 +1176,7 @@
 
   <!-- SLIDE 13 — THANKS -->
   <section class="slide thanks" id="slide-12">
-    <img class="thanks-img" src="Dick_fosbury_olimpiade_1968.png" alt="Dick Fosbury, 1968 Olympics"
+    <img class="thanks-img" src="fosbury-1968.png" alt="Dick Fosbury, 1968 Olympics"
       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
     <div class="thanks-placeholder" style="display:none;">
       <span style="font-size:24px;">&#128444;</span>
@@ -1245,69 +1239,36 @@
     if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   go(cur-1);
   });
 
-  // Fosbury video: click intro to play, video fades in, intro fades out
+  // Fosbury video: click intro to load + autoplay the YouTube embed
   const fosIntro = document.getElementById('fosIntro');
-  const fosVideo = document.getElementById('fosVideo');
-  const fosControls = document.getElementById('fosControls');
-  const fosPlayPause = document.getElementById('fosPlayPause');
-  const fosMute = document.getElementById('fosMute');
-  if (fosIntro && fosVideo) {
+  const fosFrame = document.getElementById('fosFrame');
+  const FOS_YT_ID = 'CZsH46Ek2ao';
+  if (fosIntro && fosFrame) {
     fosIntro.addEventListener('click', () => {
       fosIntro.classList.add('hidden');
-      fosVideo.classList.add('playing');
-      if (fosControls) fosControls.style.display = 'flex';
-      fosVideo.play().catch(() => {});
+      fosFrame.src = `https://www.youtube.com/embed/${FOS_YT_ID}?autoplay=1&rel=0`;
+      fosFrame.style.opacity = '1';
     });
-    if (fosPlayPause) {
-      fosPlayPause.addEventListener('click', () => {
-        if (fosVideo.paused) { fosVideo.play(); fosPlayPause.innerHTML = '&#10074;&#10074;'; }
-        else { fosVideo.pause(); fosPlayPause.innerHTML = '&#9654;'; }
-      });
-    }
-    if (fosMute) {
-      fosMute.addEventListener('click', () => {
-        fosVideo.muted = !fosVideo.muted;
-        fosMute.innerHTML = fosVideo.muted ? '&#128263;' : '&#128266;';
-      });
-    }
   }
 
-  // Mentimeter video: same click-to-play pattern
+  // Mentimeter video: same click-to-load pattern
   const mentiStage = document.getElementById('mentiStage');
-  const mentiVideo = document.getElementById('mentiVideo');
+  const mentiFrame = document.getElementById('mentiFrame');
   const mentiIntro = document.getElementById('mentiIntro');
-  if (mentiStage && mentiVideo) {
-    mentiStage.addEventListener('click', (e) => {
-      if (e.target.closest('#mentiControls')) return;
+  const MENTI_YT_ID = '76LxkWflyCI';
+  if (mentiStage && mentiFrame) {
+    mentiStage.addEventListener('click', () => {
       mentiIntro.style.opacity = '0';
-      mentiVideo.style.opacity = '1';
-      const mc = document.getElementById('mentiControls');
-      if (mc) mc.style.display = 'flex';
-      mentiVideo.play().catch(() => {});
+      mentiFrame.src = `https://www.youtube.com/embed/${MENTI_YT_ID}?autoplay=1&rel=0`;
+      mentiFrame.style.opacity = '1';
     });
-    const mentiPlayPause = document.getElementById('mentiPlayPause');
-    const mentiMute = document.getElementById('mentiMute');
-    if (mentiPlayPause) {
-      mentiPlayPause.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (mentiVideo.paused) { mentiVideo.play(); mentiPlayPause.innerHTML = '&#10074;&#10074;'; }
-        else { mentiVideo.pause(); mentiPlayPause.innerHTML = '&#9654;'; }
-      });
-    }
-    if (mentiMute) {
-      mentiMute.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mentiVideo.muted = !mentiVideo.muted;
-        mentiMute.innerHTML = mentiVideo.muted ? '&#128263;' : '&#128266;';
-      });
-    }
   }
 
-  // Pause any playing video when navigating away from its slide
+  // Stop videos when navigating away from their slide (reset src to unload the player)
   const origGo = go;
   go = function(to) {
-    if (fosVideo && cur === 1 && to !== 1) fosVideo.pause();
-    if (mentiVideo && cur === 4 && to !== 4) mentiVideo.pause();
+    if (fosFrame && cur === 1 && to !== 1) { fosFrame.src = ''; fosFrame.style.opacity = '0'; fosIntro.classList.remove('hidden'); }
+    if (mentiFrame && cur === 4 && to !== 4) { mentiFrame.src = ''; mentiFrame.style.opacity = '0'; mentiIntro.style.opacity = '1'; }
     origGo(to);
   };
   prevBtn.onclick = () => go(cur-1);
